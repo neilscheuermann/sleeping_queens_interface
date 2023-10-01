@@ -11,7 +11,10 @@ import Config
 config :sleeping_queens_interface, SleepingQueensInterfaceWeb.Endpoint,
   url: [host: "localhost"],
   render_errors: [
-    formats: [html: SleepingQueensInterfaceWeb.ErrorHTML, json: SleepingQueensInterfaceWeb.ErrorJSON],
+    formats: [
+      html: SleepingQueensInterfaceWeb.ErrorHTML,
+      json: SleepingQueensInterfaceWeb.ErrorJSON
+    ],
     layout: false
   ],
   pubsub_server: SleepingQueensInterface.PubSub,
@@ -24,7 +27,8 @@ config :sleeping_queens_interface, SleepingQueensInterfaceWeb.Endpoint,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :sleeping_queens_interface, SleepingQueensInterface.Mailer, adapter: Swoosh.Adapters.Local
+config :sleeping_queens_interface, SleepingQueensInterface.Mailer,
+  adapter: Swoosh.Adapters.Local
 
 # Configure esbuild (the version is required)
 config :esbuild,

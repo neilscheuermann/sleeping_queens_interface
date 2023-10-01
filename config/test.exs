@@ -4,7 +4,8 @@ import Config
 # you can enable the server option below.
 config :sleeping_queens_interface, SleepingQueensInterfaceWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "gjNASEZUBX/tZH6kusgEhbt0k9kICjJawDX+aXQuuAnv4yS8OLqchJkbNPIIcvE3",
+  secret_key_base:
+    "gjNASEZUBX/tZH6kusgEhbt0k9kICjJawDX+aXQuuAnv4yS8OLqchJkbNPIIcvE3",
   server: false
 
 # In test we don't send emails.
