@@ -17,6 +17,7 @@ defmodule SleepingQueensInterfaceWeb.Router do
   scope "/", SleepingQueensInterfaceWeb do
     pipe_through :browser
 
+    live "/", HomeLive
     get "/", PageController, :home
   end
 
