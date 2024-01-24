@@ -10,4 +10,3 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
     assert render(view) =~ "Sleeping Queens"
   end
 end
-
