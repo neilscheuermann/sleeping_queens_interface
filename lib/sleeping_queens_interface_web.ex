@@ -85,6 +85,7 @@ defmodule SleepingQueensInterfaceWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import SleepingQueensInterfaceWeb.CoreComponents
+      import SleepingQueensInterfaceWeb.CustomComponents
       import SleepingQueensInterfaceWeb.Gettext
 
       # Shortcut for generating JS commands

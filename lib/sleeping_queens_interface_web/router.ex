@@ -20,7 +20,7 @@ defmodule SleepingQueensInterfaceWeb.Router do
     # TODO>>>> Rip out unneeded components
     # get "/", PageController, :home
     live "/", HomeLive
-    live "/game/:id", FakeGameLive
+    live "/game/:id/:player_name", GameLive
   end
 
   # Other scopes may use custom stacks.

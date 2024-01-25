@@ -1,0 +1,49 @@
+defmodule SleepingQueensInterfaceWeb.CustomComponents do
+  @moduledoc """
+  Provides custom UI components.
+  """
+  use Phoenix.Component
+
+  @doc ~S"""
+  Renders a card
+
+  ## Examples
+
+      <.card card={card} card_position={card_position}/>
+  """
+
+  def card(assigns) do
+    ~H"""
+    <div
+      class="w-16 h-24 border border-gray-700 shadow hover:shadow-lg rounded overflow-hidden"
+      phx-click="discard"
+      phx-value-card_position={@card_position}
+    >
+      <div class="p-1">
+        <%= if @card.type == :number, do: @card.value, else: @card.type %>
+      </div>
+    </div>
+    """
+  end
+
+  @doc ~S"""
+  Renders a queen card
+
+  ## Examples
+
+      <.queen_card queen={queen} row={row} col={col}/>
+  """
+
+  def queen_card(assigns) do
+    ~H"""
+    <div class="flex flex-col p-1 justify-between w-16 h-24 bg-fuchsia-300 border border-gray-700 rounded overflow-hidden">
+      <div>
+        <%= @queen.name %>
+      </div>
+      <div>
+        <%= @queen.value %>
+      </div>
+    </div>
+    """
+  end
+end

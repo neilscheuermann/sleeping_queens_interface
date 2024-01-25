@@ -1,0 +1,112 @@
+<h1 class="text-3xl text-center mt-4">Sleeping Queens</h1>
+<!-- Board and other players -->
+<div class="grid grid-cols-4 grid-rows-3 mt-8">
+  <!-- Other players -->
+  <%= for player <- @table.players, player.position != @user.position do %>
+    <span>
+      <svg
+        class="w-24"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="black"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+        className="w-6 h-6"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+        />
+      </svg>
+      <span class="block text-center text-xl font-bold">
+        <%= player.name %>
+      </span>
+      <div class="flex justify-evenly">
+        <span><%= length(player.queens) %></span>
+        <span class="font-bold"><%= get_score(player) %></span>
+      </div>
+    </span>
+  <% end %>
+  <!-- Queens board -->
+  <div class="col-start-2 col-end-4 row-start-1 row-end-3 flex justify-center">
+    <div class="grid grid-cols-4 gap-1 w-fit justify-center">
+      <%= for {{row, col}, queen } <- @table.queens_board do %>
+        <%= if is_nil(queen) do %>
+          <div class="w-10 h-16 border border-gray-700 border-dashed rounded" />
+        <% else %>
+          <div
+            class="w-10 h-16 bg-teal-600 border border-gray-700 rounded"
+            phx-click="select_queen"
+            phx-value-row={row}
+            phx-value-col={col}
+          />
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+  <!-- Draw and discard piles -->
+  <div class="flex justify-center gap-2 mt-4 col-start-2 col-end-4 row-start-3 row-end-last">
+    <div
+      class="w-16 h-24 bg-rose-500 border border-gray-700 shadow rounded overflow-hidden"
+      phx-click="deal_cards"
+    >
+      <span><%= length(@table.draw_pile) %></span>
+    </div>
+    <div class="w-16 h-24 border border-dashed border-gray-700 shadow rounded overflow-hidden">
+      <%= if @top_discard do %>
+        <.card card={@top_discard} card_position={nil} />
+      <% else %>
+        <span>Discard</span>
+      <% end %>
+    </div>
+  </div>
+</div>
+<!-- My player and queens -->
+<div class="flex">
+  <!-- My player -->
+  <%= for player <- get_player(@table, @user.position) |> List.wrap()  do %>
+    <span>
+      <svg
+        class="w-20"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="black"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+        className="w-6 h-6"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+        />
+      </svg>
+      <div class="flex justify-evenly items-center">
+        <span class="text-center text-lg font-bold"><%= player.name %></span>
+        <span class="font-bold text-lg"><%= get_score(player) %></span>
+      </div>
+    </span>
+  <% end %>
+  <!-- My queen cards -->
+  <div class="h-24 grid grid-cols-6 px-2 mt-4">
+    <%= for {queen, _idx} <- 
+    @table.players
+    |> List.first()
+    |> Map.get(:queens) 
+    |> Enum.with_index()
+    |> Enum.reverse() do %>
+      <.queen_card queen={queen} />
+    <% end %>
+  </div>
+</div>
+<!-- My cards -->
+<div class="grid grid-cols-5 px-2 mt-4">
+  <%= for {card, idx} <- 
+    @table
+    |> get_player(@user.position)
+    |> Map.get(:hand) 
+    |> Enum.with_index() do %>
+    <.card card={card} card_position={idx + 1} />
+  <% end %>
+</div>
