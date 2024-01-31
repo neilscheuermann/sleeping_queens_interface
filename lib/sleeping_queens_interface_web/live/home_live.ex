@@ -1,6 +1,9 @@
 defmodule SleepingQueensInterfaceWeb.HomeLive do
   use SleepingQueensInterfaceWeb, :live_view
 
+  alias SleepingQueensEngine.Game
+  alias SleepingQueensEngine.GameSupervisor
+
   def render(assigns) do
     ~H"""
     <div>
@@ -42,10 +45,15 @@ defmodule SleepingQueensInterfaceWeb.HomeLive do
 
   def handle_event("create_game", %{"player_name" => player_name}, socket)
       when is_binary(player_name) do
-    {:noreply,
-     Phoenix.LiveView.push_redirect(socket,
-       to: "/game/#{generate_random_id()}/#{player_name}"
-     )}
+    new_game_id = generate_random_id()
+
+    with {:ok, game} <- GameSupervisor.start_game(new_game_id),
+         :ok <- Game.add_player(game, player_name) do
+      {:noreply,
+       Phoenix.LiveView.push_redirect(socket,
+         to: "/game/#{new_game_id}/#{player_name}"
+       )}
+    end
   end
 
   def handle_event(
@@ -53,11 +61,15 @@ defmodule SleepingQueensInterfaceWeb.HomeLive do
         %{"game_id" => game_id, "player_name" => player_name},
         socket
       )
-      when is_binary(game_id) do
-    {:noreply,
-     Phoenix.LiveView.push_navigate(socket,
-       to: "/game/#{game_id}/#{player_name}"
-     )}
+      when is_binary(game_id) and is_binary(player_name) do
+    via = Game.via_tuple(game_id)
+
+    with :ok <- Game.add_player(via, player_name) do
+      {:noreply,
+       Phoenix.LiveView.push_navigate(socket,
+         to: "/game/#{game_id}/#{player_name}"
+       )}
+    end
   end
 
   defp generate_random_id do

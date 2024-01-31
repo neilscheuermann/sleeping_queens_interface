@@ -1,21 +1,19 @@
 defmodule SleepingQueensInterfaceWeb.GameLive do
   use SleepingQueensInterfaceWeb, :live_view
 
+  alias SleepingQueensEngine.Game
   alias SleepingQueensEngine.Table
-  alias SleepingQueensEngine.QueenCard
   alias SleepingQueensEngine.Player
 
   # TODO>>>> Replace hard coded values and connect to GenServer
   def mount(params, _session, socket) do
-    user = %{position: 1}
-    player1 = Player.new(params["player_name"])
-    player2 = Player.new("leslie")
-    player3 = Player.new("andy")
-    player4 = Player.new("april")
-    player5 = Player.new("tom")
-    players = [player1, player2, player3, player4, player5]
+    %{
+      "id" => game_id
+    } = params
 
-    table = setup_table(players)
+    user = %{position: 1}
+
+    {:ok, %{table: table}} = Game.get_state(Game.via_tuple(game_id))
 
     {:ok,
      socket
