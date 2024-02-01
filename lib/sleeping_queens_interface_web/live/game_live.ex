@@ -3,13 +3,9 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
 
   alias SleepingQueensEngine.Game
   alias SleepingQueensEngine.Table
-  alias SleepingQueensEngine.Player
 
-  # TODO>>>> Replace hard coded values and connect to GenServer
-  def mount(params, _session, socket) do
-    %{
-      "id" => game_id
-    } = params
+  def mount(%{"id" => game_id}, _session, socket) do
+    if connected?(socket), do: subscribe_to_game(game_id)
 
     user = %{position: 1}
 
@@ -20,6 +16,10 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      |> assign(:table, table)
      |> assign(:top_discard, top_discard(table))
      |> assign(:user, user)}
+  end
+
+  def handle_info({:table_updated, table}, socket) do
+    {:noreply, assign(socket, :table, table)}
   end
 
   def handle_event("deal_cards", _args, socket) do
@@ -86,5 +86,12 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     player.queens
     |> Enum.map(& &1.value)
     |> Enum.sum()
+  end
+
+  defp subscribe_to_game(game_id) do
+    Phoenix.PubSub.subscribe(
+      SleepingQueensInterface.PubSub,
+      "game:#{game_id}"
+    )
   end
 end
