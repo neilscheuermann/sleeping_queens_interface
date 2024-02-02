@@ -16,6 +16,16 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
     assert render(view) =~ "Create Game"
   end
 
+  test "redirects to game page with random game code when creating a game", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/")
+
+    render_click(view, "create_game", %{"player_name" => "Neil"})
+    {path, _flash} = assert_redirect view
+
+    # checks for /game/<ANY_4_CHARACTERS>/ path
+    assert path =~ ~r/game\/([A-Za-z0-9]{4})/
+  end
+
   test "renders a join game button", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/")
 
@@ -28,6 +38,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
   #
   #   # Assert that the create game modal is initially not present
   #   # refute render(view) =~ "Create New Game"
+  #   # assert has_element?(view, ~s{[id="create_game_modal"][class="relative z-50 hidden"]})
   #   # # assert view |> find_modal("create_game_modal") |> is_nil()
   #
   #   # Click the "Create Game" button
