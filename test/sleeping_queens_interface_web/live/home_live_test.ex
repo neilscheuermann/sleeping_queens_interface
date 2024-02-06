@@ -1,10 +1,11 @@
 defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
+  use SleepingQueensInterfaceWeb.ChannelCase
   use SleepingQueensInterfaceWeb.ConnCase
 
   import Phoenix.LiveViewTest
 
-  @player1 "player1"
-  @player2 "player2"
+  @player1_name "player1"
+  @player2_name "player2"
 
   test "renders the home page", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/")
@@ -38,12 +39,12 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
   test "creating a game redirects to game page with random game id and provided player name",
        %{conn: conn} do
     {:ok, view, _html} = live(conn, "/")
-    render_click(view, "create_game", %{"player_name" => @player1})
+    render_click(view, "create_game", %{"player_name" => @player1_name})
     {path, _flash} = assert_redirect(view)
 
     # checks for /game/<ANY_4_CHARACTERS>/
     assert path =~ ~r/game\/([A-Za-z0-9]{4})/
-    assert path =~ @player1
+    assert path =~ @player1_name
   end
 
   test "renders a join game button", %{conn: conn} do
@@ -71,7 +72,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
        %{conn: conn} do
     # create game with player 1
     {:ok, view1, _html} = live(conn, "/")
-    render_click(view1, "create_game", %{"player_name" => @player1})
+    render_click(view1, "create_game", %{"player_name" => @player1_name})
     {path, _flash} = assert_redirect(view1)
     game_id = extract_game_id(path)
 
@@ -80,16 +81,40 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
 
     render_click(view2, "join_game", %{
       "game_id" => game_id,
-      "player_name" => @player2
+      "player_name" => @player2_name
     })
 
     {path, _flash} = assert_redirect(view2)
 
     # checks for /game/<ANY_4_CHARACTERS>/ path
-    assert path =~ "/game/#{game_id}/#{@player2}"
+    assert path =~ "/game/#{game_id}/#{@player2_name}"
   end
 
-  # Returns game id from a path structured like "/game/ABCD/player1"
+  test "when a player joins a game, a pubsub message with the updated table is sent to those subscribed to that game's topic",
+       %{conn: conn} do
+    # create game with player 1
+    {:ok, view1, _html} = live(conn, "/")
+    render_click(view1, "create_game", %{"player_name" => @player1_name})
+    {path, _flash} = assert_redirect(view1)
+    game_id = extract_game_id(path)
+
+    # Subscribe to the game topic
+    @endpoint.subscribe("game:#{game_id}")
+
+    # join game with player 2
+    {:ok, view2, _html} = live(conn, "/")
+
+    render_click(view2, "join_game", %{
+      "game_id" => game_id,
+      "player_name" => @player2_name
+    })
+
+    # Make sure this subscribed process receives the message.
+    assert_receive({:table_updated, table})
+    Enum.each(table.players, &(&1.name in [@player1_name, @player2_name]))
+  end
+
+  # Returns game id from a path structured like "/game/ABCD/player1_name"
   defp extract_game_id(path) do
     path
     |> String.split("/")
