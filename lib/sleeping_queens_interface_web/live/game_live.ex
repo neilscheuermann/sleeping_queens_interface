@@ -66,12 +66,6 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   # Private Functions
   #
 
-  defp setup_table(players) do
-    players
-    |> Table.new()
-    |> Table.deal_cards()
-  end
-
   defp top_discard(table) do
     List.first(table.discard_pile)
   end
