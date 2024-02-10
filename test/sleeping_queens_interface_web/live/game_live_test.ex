@@ -38,6 +38,42 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
     assert render(view) =~ @player2_name
   end
 
+  test "shows a start game button if the game hasn't started", %{conn: conn} do
+    # Player1 creates game and redirected to game page
+    {:ok, view, _html} = live(conn, "/")
+    assert view.module == SleepingQueensInterfaceWeb.HomeLive
+    render_click(view, "create_game", %{"player_name" => @player1_name})
+    {path, _flash} = assert_redirect(view)
+    game_id = extract_game_id(path)
+
+    # Visit the game page
+    {:ok, view, _html} = live(conn, "/game/#{game_id}/any_name")
+
+    assert view.module == SleepingQueensInterfaceWeb.GameLive
+    assert render(view) =~ "Start Game"
+  end
+
+  test "shows flash error when trying to start a game without enough players", %{
+    conn: conn
+  } do
+    # Player1 creates game and redirected to game page
+    {:ok, view, _html} = live(conn, "/")
+    assert view.module == SleepingQueensInterfaceWeb.HomeLive
+    render_click(view, "create_game", %{"player_name" => @player1_name})
+    {path, _flash} = assert_redirect(view)
+    game_id = extract_game_id(path)
+
+    # Visit the game page
+    {:ok, view, _html} = live(conn, "/game/#{game_id}/any_name")
+
+    assert view.module == SleepingQueensInterfaceWeb.GameLive
+    assert render(view) =~ "Start Game"
+
+    # Visit the game page
+    render_click(view, "start_game")
+    assert render(view) =~ "Unable to start game without enough players"
+  end
+
   # Returns game id from a path structured like "/game/ABCD/player1_name"
   defp extract_game_id(path) do
     path

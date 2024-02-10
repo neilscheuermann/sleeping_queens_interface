@@ -1,4 +1,7 @@
 <h1 class="text-3xl text-center mt-4">Sleeping Queens</h1>
+<.button :if={@rules.state == :initialized} phx-click="start_game">
+  Start Game
+</.button>
 <!-- Board and other players -->
 <div class="grid grid-cols-4 grid-rows-3 mt-8">
   <!-- Other players -->
@@ -29,7 +32,10 @@
     </span>
   <% end %>
   <!-- Queens board -->
-  <div class="col-start-2 col-end-4 row-start-1 row-end-3 flex justify-center">
+  <div
+    :if={@rules.state != :initialized}
+    class="col-start-2 col-end-4 row-start-1 row-end-3 flex justify-center"
+  >
     <div class="grid grid-cols-4 gap-1 w-fit justify-center">
       <%= for {{row, col}, queen } <- @table.queens_board do %>
         <%= if is_nil(queen) do %>
@@ -46,7 +52,10 @@
     </div>
   </div>
   <!-- Draw and discard piles -->
-  <div class="flex justify-center gap-2 mt-4 col-start-2 col-end-4 row-start-3 row-end-last">
+  <div
+    :if={@rules.state != :initialized}
+    class="flex justify-center gap-2 mt-4 col-start-2 col-end-4 row-start-3 row-end-last"
+  >
     <div
       class="w-16 h-24 bg-rose-500 border border-gray-700 shadow rounded overflow-hidden"
       phx-click="deal_cards"

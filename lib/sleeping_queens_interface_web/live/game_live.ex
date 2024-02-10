@@ -9,13 +9,23 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
 
     user = %{position: 1}
 
-    {:ok, %{table: table}} = Game.get_state(Game.via_tuple(game_id))
+    {:ok, %{game_id: game_id, rules: rules, table: table}} =
+      Game.get_state(Game.via_tuple(game_id))
 
     {:ok,
      socket
+     |> assign(:game_id, game_id)
+     |> assign(:rules, rules)
      |> assign(:table, table)
      |> assign(:top_discard, top_discard(table))
      |> assign(:user, user)}
+  end
+
+  def handle_info({:game_updated, {rules, table}}, socket) do
+    {:noreply,
+     socket
+     |> assign(:rules, rules)
+     |> assign(:table, table)}
   end
 
   def handle_info({:table_updated, table}, socket) do
@@ -46,6 +56,25 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
 
   def handle_event("discard", _, socket) do
     {:noreply, socket}
+  end
+
+  def handle_event("start_game", _, socket) do
+    game_id = socket.assigns.game_id
+    via = Game.via_tuple(game_id)
+
+    case Game.start_game(via) do
+      :ok ->
+        broadcast_new_state(game_id)
+        {:noreply, socket}
+
+      :error ->
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           "Unable to start game without enough players"
+         )}
+    end
   end
 
   def handle_event("select_queen", %{"row" => row, "col" => col}, socket) do
@@ -86,6 +115,17 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     Phoenix.PubSub.subscribe(
       SleepingQueensInterface.PubSub,
       "game:#{game_id}"
+    )
+  end
+
+  defp broadcast_new_state(game_id) do
+    via = Game.via_tuple(game_id)
+    {:ok, %{rules: rules, table: table}} = Game.get_state(via)
+
+    Phoenix.PubSub.broadcast(
+      SleepingQueensInterface.PubSub,
+      "game:#{game_id}",
+      {:game_updated, {rules, table}}
     )
   end
 end
