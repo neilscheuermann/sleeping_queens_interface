@@ -22,7 +22,11 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
     assert view.module == SleepingQueensInterfaceWeb.HomeLive
 
     # Joins player1's game and is redirected to correct game
-    render_click(view, "join_game", %{"game_id" => game_id, "player_name" => @player2_name})
+    render_click(view, "join_game", %{
+      "game_id" => game_id,
+      "player_name" => @player2_name
+    })
+
     {path, _flash} = assert_redirect(view)
     assert extract_game_id(path) == game_id
 

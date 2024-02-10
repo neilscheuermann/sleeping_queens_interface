@@ -102,12 +102,12 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
     })
 
     {path, _flash} = assert_redirect(view2)
-
     assert path =~ "/game/#{game_id}/#{@player2_name}"
 
     # Start game
     via = Game.via_tuple(game_id)
-    {:ok, %{table: table}} = Game.get_state(via) |> IO.inspect(label: ">>>>state")
+    assert :ok = Game.start_game(via)
+    {:ok, %{rules: %{state: :playing}}} = Game.get_state(via)
 
     # player 3 tries to join game but doesn't get redirected
     {:ok, view3, _html} = live(conn, "/")
@@ -117,7 +117,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
       "player_name" => @player3_name
     })
 
-    :ok = refute_redirected view3, "/game/#{game_id}/#{@player3_name}"
+    :ok = refute_redirected(view3, "/game/#{game_id}/#{@player3_name}")
   end
 
   # TODO>>>>
