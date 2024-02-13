@@ -76,6 +76,14 @@ defmodule SleepingQueensInterfaceWeb.HomeLive do
        Phoenix.LiveView.push_navigate(socket,
          to: "/game/#{game_id}/#{player_name}"
        )}
+    else
+      :error ->
+        socket =
+          socket
+          |> clear_flash()
+          |> put_flash(:error, "Unable to join game")
+
+        {:noreply, socket}
     end
   end
 

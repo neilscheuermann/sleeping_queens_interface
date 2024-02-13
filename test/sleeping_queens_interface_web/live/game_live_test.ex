@@ -53,9 +53,10 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
     assert render(view) =~ "Start Game"
   end
 
-  test "shows flash error when trying to start a game without enough players", %{
-    conn: conn
-  } do
+  test "shows flash error when trying to start a game without enough players",
+       %{
+         conn: conn
+       } do
     # Player1 creates game and redirected to game page
     {:ok, view, _html} = live(conn, "/")
     assert view.module == SleepingQueensInterfaceWeb.HomeLive

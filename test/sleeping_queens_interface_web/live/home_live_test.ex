@@ -109,7 +109,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
     assert :ok = Game.start_game(via)
     {:ok, %{rules: %{state: :playing}}} = Game.get_state(via)
 
-    # player 3 tries to join game but doesn't get redirected
+    # player 3 tries to join game but doesn't get redirected and sees a flash message
     {:ok, view3, _html} = live(conn, "/")
 
     render_click(view3, "join_game", %{
@@ -118,6 +118,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
     })
 
     :ok = refute_redirected(view3, "/game/#{game_id}/#{@player3_name}")
+    assert render(view3) =~ "Unable to join game"
   end
 
   # TODO>>>>
