@@ -6,6 +6,7 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
 
   @player1_name "player1"
   @player2_name "player2"
+  @total_number_of_draw_cards 68
 
   test "renders all joined players", %{conn: conn} do
     # Player1 goes to home page
@@ -36,6 +37,42 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
     assert view.module == SleepingQueensInterfaceWeb.GameLive
     assert render(view) =~ @player1_name
     assert render(view) =~ @player2_name
+  end
+
+  test "renders correct number of cards in draw pile before and after dealing the cards", %{conn: conn} do
+    # Player1 goes to home page
+    {:ok, view, _html} = live(conn, "/")
+    assert view.module == SleepingQueensInterfaceWeb.HomeLive
+
+    # Creates game and is redirected
+    render_click(view, "create_game", %{"player_name" => @player1_name})
+    {path, _flash} = assert_redirect(view)
+    game_id = extract_game_id(path)
+
+    # Player2 goes to home page
+    {:ok, view, _html} = live(conn, "/")
+    assert view.module == SleepingQueensInterfaceWeb.HomeLive
+
+    # Joins player1's game and is redirected to correct game
+    render_click(view, "join_game", %{
+      "game_id" => game_id,
+      "player_name" => @player2_name
+    })
+
+    {path, _flash} = assert_redirect(view)
+    assert extract_game_id(path) == game_id
+
+    # Visit game page
+    {:ok, view, _html} = live(conn, "/game/#{game_id}/any_name")
+    assert view.module == SleepingQueensInterfaceWeb.GameLive
+
+    # start game
+    render_click(view, "start_game")
+    assert render(view) =~ "#{@total_number_of_draw_cards} cards"
+    
+    # deal cards
+    render_click(view, "deal_cards")
+    assert render(view) =~ "#{@total_number_of_draw_cards - 10} cards"
   end
 
   test "shows a start game button if the game hasn't started", %{conn: conn} do
