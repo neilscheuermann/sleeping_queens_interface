@@ -1,8 +1,4 @@
 <h1 class="text-3xl text-center mt-4">Sleeping Queens</h1>
-<.button :if={@rules.state == :initialized} phx-click="start_game">
-  Start Game
-</.button>
-<!-- Board and other players -->
 <div class="grid grid-cols-4 grid-rows-3 mt-8">
   <!-- Other players -->
   <%= for player <- @table.players, player.position != @user.position do %>
@@ -32,10 +28,7 @@
     </span>
   <% end %>
   <!-- Queens board -->
-  <div
-    :if={@rules.state != :initialized}
-    class="col-start-2 col-end-4 row-start-1 row-end-3 flex justify-center"
-  >
+  <div class="col-start-2 col-end-4 row-start-1 row-end-3 flex justify-center">
     <div class="grid grid-cols-4 gap-1 w-fit justify-center">
       <%= for {{row, col}, queen } <- @table.queens_board do %>
         <%= if is_nil(queen) do %>
@@ -119,3 +112,7 @@
     <.card card={card} card_position={idx + 1} />
   <% end %>
 </div>
+<.button :if={@rules.state == :initialized} phx-click="start_game">
+  Start Game
+</.button>
+<!-- Board and other players -->
