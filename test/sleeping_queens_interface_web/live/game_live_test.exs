@@ -39,7 +39,8 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
     assert render(view) =~ @player2_name
   end
 
-  test "renders correct number of cards in draw pile before and after dealing the cards", %{conn: conn} do
+  test "renders correct number of cards in draw pile before and after dealing the cards",
+       %{conn: conn} do
     # Player1 goes to home page
     {:ok, view, _html} = live(conn, "/")
     assert view.module == SleepingQueensInterfaceWeb.HomeLive
@@ -69,7 +70,7 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
     # start game
     render_click(view, "start_game")
     assert render(view) =~ "#{@total_number_of_draw_cards} cards"
-    
+
     # deal cards
     render_click(view, "deal_cards")
     assert render(view) =~ "#{@total_number_of_draw_cards - 10} cards"

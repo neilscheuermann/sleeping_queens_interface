@@ -21,21 +21,48 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      |> assign(:user, user)}
   end
 
-  def handle_info({:game_updated, {rules, table}}, socket) do
-    {:noreply,
-     socket
-     |> assign(:rules, rules)
-     |> assign(:table, table)}
-  end
+  ###
+  # Click events
+  #
 
-  def handle_info({:table_updated, table}, socket) do
-    {:noreply, assign(socket, :table, table)}
+  def handle_event("start_game", _, socket) do
+    game_id = socket.assigns.game_id
+    via = Game.via_tuple(game_id)
+
+    case Game.start_game(via) do
+      :ok ->
+        # TODO>>>> Add test for this pubsub update
+        broadcast_new_state(game_id)
+        {:noreply, socket}
+
+      :error ->
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           "Unable to start game without enough players"
+         )}
+    end
   end
 
   def handle_event("deal_cards", _args, socket) do
-    table = Table.deal_cards(socket.assigns.table)
+    game_id = socket.assigns.game_id
+    via = Game.via_tuple(game_id)
 
-    {:noreply, assign(socket, :table, table)}
+    case Game.deal_cards(via) do
+      :ok ->
+        # TODO>>>> Add test for this pubsub update
+        broadcast_new_state(game_id)
+        {:noreply, socket}
+
+      :error ->
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           "Unable to start game without enough players"
+         )}
+    end
   end
 
   def handle_event("discard", %{"card_position" => card_position}, socket) do
@@ -58,25 +85,6 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     {:noreply, socket}
   end
 
-  def handle_event("start_game", _, socket) do
-    game_id = socket.assigns.game_id
-    via = Game.via_tuple(game_id)
-
-    case Game.start_game(via) do
-      :ok ->
-        broadcast_new_state(game_id)
-        {:noreply, socket}
-
-      :error ->
-        {:noreply,
-         put_flash(
-           socket,
-           :error,
-           "Unable to start game without enough players"
-         )}
-    end
-  end
-
   def handle_event("select_queen", %{"row" => row, "col" => col}, socket) do
     {row, _} = Integer.parse(row)
     {col, _} = Integer.parse(col)
@@ -88,6 +96,21 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
         socket.assigns.user.position
       )
 
+    {:noreply, assign(socket, :table, table)}
+  end
+
+  ###
+  # Game PubSub updates
+  #
+
+  def handle_info({:game_updated, {rules, table}}, socket) do
+    {:noreply,
+     socket
+     |> assign(:rules, rules)
+     |> assign(:table, table)}
+  end
+
+  def handle_info({:table_updated, table}, socket) do
     {:noreply, assign(socket, :table, table)}
   end
 
