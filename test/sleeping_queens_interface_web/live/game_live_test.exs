@@ -91,6 +91,49 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
     assert render(view) =~ "Start Game"
   end
 
+  test "sends a pubsub update to game topic when starting the game", %{
+    conn: conn
+  } do
+    # Player1 goes to home page
+    {:ok, view, _html} = live(conn, "/")
+    assert view.module == SleepingQueensInterfaceWeb.HomeLive
+
+    # Creates game and is redirected
+    render_click(view, "create_game", %{"player_name" => @player1_name})
+    {path, _flash} = assert_redirect(view)
+    game_id = extract_game_id(path)
+
+    # Subscribe to the game topic
+    @endpoint.subscribe("game:#{game_id}")
+
+    # Player2 goes to home page
+    {:ok, view, _html} = live(conn, "/")
+    assert view.module == SleepingQueensInterfaceWeb.HomeLive
+
+    # Joins player1's game and is redirected to correct game
+    render_click(view, "join_game", %{
+      "game_id" => game_id,
+      "player_name" => @player2_name
+    })
+
+    assert_receive({:table_updated, table})
+
+    {path, _flash} = assert_redirect(view)
+    assert extract_game_id(path) == game_id
+
+    # Visit game page
+    {:ok, view, _html} = live(conn, "/game/#{game_id}/any_name")
+    assert view.module == SleepingQueensInterfaceWeb.GameLive
+
+    # start game
+    render_click(view, "start_game")
+    assert render(view) =~ "#{@total_number_of_draw_cards} cards"
+
+    # Make sure this subscribed process receives the message.
+    assert_receive({:game_updated, {rules, table}})
+    Enum.each(table.players, &(&1.name in [@player1_name, @player2_name]))
+  end
+
   test "shows flash error when trying to start a game without enough players",
        %{
          conn: conn
