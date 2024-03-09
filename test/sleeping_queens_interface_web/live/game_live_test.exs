@@ -116,7 +116,7 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
       "player_name" => @player2_name
     })
 
-    assert_receive({:table_updated, table})
+    assert_receive({:table_updated, _table})
 
     {path, _flash} = assert_redirect(view)
     assert extract_game_id(path) == game_id
@@ -131,7 +131,15 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
 
     # Make sure this subscribed process receives the message.
     assert_receive({:game_updated, {rules, table}})
-    Enum.each(table.players, &(&1.name in [@player1_name, @player2_name]))
+
+    Enum.each(table.players, &assert(&1.name in [@player1_name, @player2_name]))
+
+    assert %SleepingQueensEngine.Rules{
+             state: :playing,
+             player_count: 2,
+             player_turn: 1,
+             waiting_on: nil
+           } = rules
   end
 
   test "shows flash error when trying to start a game without enough players",

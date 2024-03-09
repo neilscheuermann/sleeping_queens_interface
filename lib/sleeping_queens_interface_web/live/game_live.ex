@@ -9,7 +9,7 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
 
     user = %{position: 1}
 
-    {:ok, %{game_id: game_id, rules: rules, table: table}} =
+    %{game_id: game_id, rules: rules, table: table} =
       Game.get_state(Game.via_tuple(game_id))
 
     {:ok,
@@ -143,7 +143,7 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
 
   defp broadcast_new_state(game_id) do
     via = Game.via_tuple(game_id)
-    {:ok, %{rules: rules, table: table}} = Game.get_state(via)
+    %{rules: rules, table: table} = Game.get_state(via)
 
     Phoenix.PubSub.broadcast(
       SleepingQueensInterface.PubSub,

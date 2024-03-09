@@ -65,7 +65,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLive do
     via = Game.via_tuple(game_id)
 
     with :ok <- Game.add_player(via, player_name),
-         {:ok, %{table: table}} = Game.get_state(via) do
+         %{table: table} = Game.get_state(via) do
       Phoenix.PubSub.broadcast(
         SleepingQueensInterface.PubSub,
         "game:#{game_id}",

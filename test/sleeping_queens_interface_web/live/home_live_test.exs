@@ -107,7 +107,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
     # Start game
     via = Game.via_tuple(game_id)
     assert :ok = Game.start_game(via)
-    {:ok, %{rules: %{state: :playing}}} = Game.get_state(via)
+    %{rules: %{state: :playing}} = Game.get_state(via)
 
     # player 3 tries to join game but doesn't get redirected and sees a flash message
     {:ok, view3, _html} = live(conn, "/")
