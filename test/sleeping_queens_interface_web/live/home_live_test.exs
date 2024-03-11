@@ -80,6 +80,9 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
       "player_name" => @player2_name
     })
 
+    {path, _flash} = assert_redirect(view2)
+    assert extract_game_id(path) == game_id
+
     # Make sure this subscribed process receives the message.
     assert_receive({:table_updated, table})
     Enum.each(table.players, &(&1.name in [@player1_name, @player2_name]))

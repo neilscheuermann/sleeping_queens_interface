@@ -50,7 +50,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLive do
     with {:ok, game} <- GameSupervisor.start_game(new_game_id),
          :ok <- Game.add_player(game, player_name) do
       {:noreply,
-       Phoenix.LiveView.push_redirect(socket,
+       Phoenix.LiveView.push_navigate(socket,
          to: "/game/#{new_game_id}/#{player_name}"
        )}
     end
@@ -66,6 +66,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLive do
 
     with :ok <- Game.add_player(via, player_name),
          %{table: table} = Game.get_state(via) do
+      # TODO>>>> Replace with :game_updated 
       Phoenix.PubSub.broadcast(
         SleepingQueensInterface.PubSub,
         "game:#{game_id}",
