@@ -9,6 +9,7 @@ const LocalStateStore = {
 
   store(obj) {
     sessionStorage.setItem(obj.key, obj.data)
+    this.pushEvent(obj.event, obj.data)
   },
 
   restore(obj) {
