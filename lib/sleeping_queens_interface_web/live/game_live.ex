@@ -1,16 +1,40 @@
 defmodule SleepingQueensInterfaceWeb.GameLive do
   use SleepingQueensInterfaceWeb, :live_view
 
+  require Logger
+
   alias SleepingQueensEngine.Game
   alias SleepingQueensEngine.Table
 
-  def mount(%{"id" => game_id}, _session, socket) do
+  def mount(%{"id" => game_id, "player_id" => player_id}, _session, socket) do
     if connected?(socket), do: subscribe_to_game(game_id)
 
     user = %{position: 1}
 
     %{game_id: game_id, rules: rules, table: table} =
       Game.get_state(Game.via_tuple(game_id))
+
+    # Only try to talk to the client when the websocket
+    # is setup. Not on the initial "static" render.
+    socket =
+      if connected?(socket) do
+        # This represents some meaningful key to your LiveView that you can
+        # store and restore state using. Perhaps an ID from the page
+        # the user is visiting?
+        my_storage_key = player_id <> game_id
+        # For handle_params, it could be
+        # my_storage_key = params["id"]
+
+        socket
+        |> assign(:my_storage_key, my_storage_key)
+        # request the browser to restore any state it has for this key.
+        |> push_event("restore", %{
+          key: my_storage_key,
+          event: "getUserData"
+        })
+      else
+        socket
+      end
 
     {:ok,
      socket
@@ -19,6 +43,24 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      |> assign(:table, table)
      |> assign(:top_discard, top_discard(table))
      |> assign(:user, user)}
+  end
+
+  # Pushed from JS hook. Server requests it to send up any
+  # stored settings for the key.
+  def handle_event(
+        "getUserData",
+        %{"player_position" => player_position},
+        socket
+      ) do
+    socket = assign(socket, :user, %{position: player_position})
+
+    {:noreply, socket}
+  end
+
+  def handle_event("getUserData", _params, socket) do
+    # No expected token data received from the client
+    Logger.debug("No LiveView SessionStorage state to restore")
+    {:noreply, socket}
   end
 
   ###

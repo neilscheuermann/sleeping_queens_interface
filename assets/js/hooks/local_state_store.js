@@ -8,20 +8,19 @@ const LocalStateStore = {
   },
 
   store(obj) {
-    sessionStorage.setItem(obj.key, obj.data)
+    const data = JSON.stringify(obj.data)
+    sessionStorage.setItem(obj.key, data)
     this.pushEvent(obj.event, obj.data)
   },
 
   restore(obj) {
-    var data = sessionStorage.getItem(obj.key)
-    this.pushEvent(obj.event, data)
+    const stringData = sessionStorage.getItem(obj.key)
+    this.pushEvent(obj.event, JSON.parse(stringData))
   },
 
   clear(obj) {
     sessionStorage.removeItem(obj.key)
   }
 }
-
-console.log(LocalStateStore)
 
 export default LocalStateStore;
