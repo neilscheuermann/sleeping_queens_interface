@@ -49,23 +49,13 @@ defmodule SleepingQueensInterfaceWeb.HomeLive do
 
     with {:ok, game} <- GameSupervisor.start_game(new_game_id),
          :ok <- Game.add_player(game, player_name) do
-      %{rules: %{player_count: player_count}} =
+      %{rules: %{player_count: player_position}} =
         Game.get_state(Game.via_tuple(new_game_id))
 
-      # TODO>>>> Create serialize and deserialize functions
-      player_id = player_name <> generate_random_id()
-      storage_key = player_id <> new_game_id
-
       {:noreply,
-       push_event(socket, "store", %{
-         key: storage_key,
-         data: %{
-           game_id: new_game_id,
-           player_id: player_id,
-           player_position: player_count
-         },
-         event: "localStateStored"
-       })}
+       Phoenix.LiveView.push_navigate(socket,
+         to: "/game/#{new_game_id}/#{player_position}"
+       )}
     end
   end
 
@@ -78,12 +68,8 @@ defmodule SleepingQueensInterfaceWeb.HomeLive do
     via = Game.via_tuple(game_id)
 
     with :ok <- Game.add_player(via, player_name) do
-      %{rules: %{player_count: player_count}, table: table} =
+      %{rules: %{player_count: player_position}, table: table} =
         Game.get_state(via)
-
-      # TODO>>>> Create serialize and deserialize functions
-      player_id = player_name <> generate_random_id()
-      storage_key = player_id <> game_id
 
       # TODO>>>> Replace with :game_updated 
       Phoenix.PubSub.broadcast(
@@ -93,15 +79,9 @@ defmodule SleepingQueensInterfaceWeb.HomeLive do
       )
 
       {:noreply,
-       push_event(socket, "store", %{
-         key: storage_key,
-         data: %{
-           game_id: game_id,
-           player_id: player_id,
-           player_position: player_count
-         },
-         event: "localStateStored"
-       })}
+       Phoenix.LiveView.push_navigate(socket,
+         to: "/game/#{game_id}/#{player_position}"
+       )}
     else
       :error ->
         socket =
@@ -111,12 +91,6 @@ defmodule SleepingQueensInterfaceWeb.HomeLive do
 
         {:noreply, socket}
     end
-  end
-
-  def handle_event("localStateStored", stored_data, socket) do
-    %{"game_id" => game_id, "player_id" => player_id} = stored_data
-
-    {:noreply, push_navigate(socket, to: "/game/#{game_id}/#{player_id}")}
   end
 
   defp generate_random_id do
