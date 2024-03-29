@@ -23,15 +23,14 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
     assert render(view) =~ "Create Game"
   end
 
-  test "creating a game redirects to game page with random game id and provided player name",
+  test "creating a game redirects to game page with random game id and player's position",
        %{conn: conn} do
     {:ok, view, _html} = live(conn, "/")
     render_click(view, "create_game", %{"player_name" => @player1_name})
     {path, _flash} = assert_redirect(view)
 
-    # checks for /game/<ANY_4_CHARACTERS>/
-    assert path =~ ~r/game\/([A-Za-z0-9]{4})/
-    assert path =~ @player1_name
+    # checks for /game/<ANY_4_CHARACTERS>/<PLAYER_POSITION>
+    assert path =~ ~r/game\/([A-Za-z0-9]{4})\/1/
   end
 
   test "renders a join game button", %{conn: conn} do
@@ -40,7 +39,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
     assert render(view) =~ "Join Game"
   end
 
-  test "joining a game redirects to game page with provided game id and player name",
+  test "joining a game redirects to game page with provided game id and player's position",
        %{conn: conn} do
     # create game with player 1
     {:ok, view1, _html} = live(conn, "/")
@@ -58,7 +57,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
 
     {path, _flash} = assert_redirect(view2)
 
-    assert path =~ "/game/#{game_id}/#{@player2_name}"
+    assert path =~ "/game/#{game_id}/2"
   end
 
   test "when a player joins a game, a pubsub message with the updated table is sent to those subscribed to that game's topic",
@@ -105,7 +104,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
     })
 
     {path, _flash} = assert_redirect(view2)
-    assert path =~ "/game/#{game_id}/#{@player2_name}"
+    assert path =~ "/game/#{game_id}/2"
 
     # Start game
     via = Game.via_tuple(game_id)
@@ -120,7 +119,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
       "player_name" => @player3_name
     })
 
-    :ok = refute_redirected(view3, "/game/#{game_id}/#{@player3_name}")
+    :ok = refute_redirected(view3, "/game/#{game_id}/3")
     assert render(view3) =~ "Unable to join game"
   end
 
@@ -155,7 +154,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
   #          |> render_click() =~ "Create New Game"
   # end
 
-  # Returns game id from a path structured like "/game/ABCD/player1_name"
+  # Returns game id from a path structured like "/game/ABCD/player_position"
   defp extract_game_id(path) do
     path
     |> String.split("/")
