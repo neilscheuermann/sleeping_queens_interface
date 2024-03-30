@@ -37,7 +37,6 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
 
     case Game.start_game(via) do
       :ok ->
-        # TODO>>>> Add test for this pubsub update
         broadcast_new_state(game_id)
         {:noreply, socket}
 
@@ -57,7 +56,6 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
 
     case Game.deal_cards(via) do
       :ok ->
-        # TODO>>>> Add test for this pubsub update
         broadcast_new_state(game_id)
         {:noreply, socket}
 
