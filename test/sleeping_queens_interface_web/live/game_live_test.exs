@@ -163,7 +163,8 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
       "player_name" => @player2_name
     })
 
-    assert_receive({:table_updated, table})
+    assert_receive({:game_updated, {rules, table}})
+    assert rules.player_count == 2
     assert length(table.players) == 2
 
     %{game_id: game_id}

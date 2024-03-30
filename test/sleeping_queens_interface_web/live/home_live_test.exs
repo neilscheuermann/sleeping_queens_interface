@@ -60,7 +60,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
     assert path =~ "/game/#{game_id}/2"
   end
 
-  test "when a player joins a game, a pubsub message with the updated table is sent to those subscribed to that game's topic",
+  test "when a player joins a game, a pubsub message with the updated rules and table is sent to those subscribed to that game's topic",
        %{conn: conn} do
     # create game with player 1
     {:ok, view1, _html} = live(conn, "/")
@@ -83,8 +83,13 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
     assert extract_game_id(path) == game_id
 
     # Make sure this subscribed process receives the message.
-    assert_receive({:table_updated, table})
-    Enum.each(table.players, &(&1.name in [@player1_name, @player2_name]))
+    assert_receive({:game_updated, {rules, table}})
+    assert rules.player_count == 2
+
+    Enum.each(
+      table.players,
+      assert(&(&1.name in [@player1_name, @player2_name]))
+    )
   end
 
   test "cannot join a game that has already started",

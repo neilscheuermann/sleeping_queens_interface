@@ -114,10 +114,6 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      |> assign(:table, table)}
   end
 
-  def handle_info({:table_updated, table}, socket) do
-    {:noreply, assign(socket, :table, table)}
-  end
-
   ###
   # Private Functions
   #

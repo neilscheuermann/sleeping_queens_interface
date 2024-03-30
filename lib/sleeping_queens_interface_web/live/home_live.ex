@@ -68,14 +68,13 @@ defmodule SleepingQueensInterfaceWeb.HomeLive do
     via = Game.via_tuple(game_id)
 
     with :ok <- Game.add_player(via, player_name) do
-      %{rules: %{player_count: player_position}, table: table} =
+      %{rules: %{player_count: player_position} = rules, table: table} =
         Game.get_state(via)
 
-      # TODO>>>> Replace with :game_updated 
       Phoenix.PubSub.broadcast(
         SleepingQueensInterface.PubSub,
         "game:#{game_id}",
-        {:table_updated, table}
+        {:game_updated, {rules, table}}
       )
 
       {:noreply,
