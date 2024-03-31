@@ -11,12 +11,18 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
 
       <.card card={card} card_position={card_position}/>
   """
+  attr :card, :map
+  attr :card_position, :integer
+  attr :class, :string, default: nil
 
   def card(assigns) do
     ~H"""
     <div
-      class="w-16 h-24 border border-gray-700 shadow hover:shadow-lg rounded overflow-hidden"
-      phx-click="discard"
+      class={[
+        "w-16 h-24 border border-gray-700 shadow hover:shadow-lg rounded overflow-hidden",
+        @class
+      ]}
+      phx-click="select"
       phx-value-card_position={@card_position}
     >
       <div class="p-1">

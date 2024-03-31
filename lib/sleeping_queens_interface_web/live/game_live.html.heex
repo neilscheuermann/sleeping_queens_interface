@@ -109,7 +109,11 @@
     |> get_player(@user.position)
     |> Map.get(:hand) 
     |> Enum.with_index() do %>
-    <.card card={card} card_position={idx + 1} />
+    <.card
+      card={card}
+      card_position={idx + 1}
+      class={(idx + 1) in @selected_cards and "border-2 border-yellow-500"}
+    />
   <% end %>
 </div>
 <.button :if={@rules.state == :initialized} phx-click="start_game">

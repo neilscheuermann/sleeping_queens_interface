@@ -24,7 +24,8 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      |> assign(:rules, rules)
      |> assign(:table, table)
      |> assign(:top_discard, top_discard(table))
-     |> assign(:user, user)}
+     |> assign(:user, user)
+     |> assign(:selected_cards, [])}
   end
 
   ###
@@ -67,6 +68,20 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
            "Unable to start game without enough players"
          )}
     end
+  end
+
+  def handle_event("select", %{"card_position" => card_position}, socket) do
+    card_position = String.to_integer(card_position)
+    selected_cards = socket.assigns.selected_cards
+
+    selected_cards =
+      if card_position in selected_cards do
+        Enum.reject(selected_cards, &(&1 == card_position))
+      else
+        [card_position | selected_cards]
+      end
+
+    {:noreply, assign(socket, :selected_cards, selected_cards)}
   end
 
   def handle_event("discard", %{"card_position" => card_position}, socket) do
