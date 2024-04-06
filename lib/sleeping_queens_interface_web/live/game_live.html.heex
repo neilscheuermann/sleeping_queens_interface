@@ -1,5 +1,12 @@
 <h1 class="text-3xl text-center mt-4">Sleeping Queens</h1>
-<div class="grid grid-cols-4 grid-rows-3 mt-8">
+<p :if={@rules.state == :initialized} class="text-xl text-center">
+  Waiting to start...
+</p>
+<p :if={@rules.state == :playing} class="text-xl text-center">
+  <%= get_player(@table, @rules.player_turn).name %>'s turn
+</p>
+<!-- Board and other players -->
+<div class="grid grid-cols-4 grid-rows-3 mt-2">
   <!-- Other players -->
   <%= for player <- @table.players, player.position != @user.position do %>
     <span>
@@ -116,7 +123,18 @@
     />
   <% end %>
 </div>
-<.button :if={@rules.state == :initialized} phx-click="start_game">
-  Start Game
-</.button>
-<!-- Board and other players -->
+<!-- Start button -->
+<div :if={@rules.state == :initialized} class="m-2">
+  <.button class="w-full" phx-click="start_game">
+    Start Game
+  </.button>
+</div>
+<!-- Play and Discard buttons -->
+<div :if={@rules.state == :playing} class="m-2 grid grid-cols-3 gap-2">
+  <.button class="col-span-2" phx-click="play" disabled={!@can_play_selection?}>
+    Play
+  </.button>
+  <.button phx-click="discard" disabled={!@can_discard_selection?}>
+    Discard
+  </.button>
+</div>

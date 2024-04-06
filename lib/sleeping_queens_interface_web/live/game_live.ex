@@ -25,7 +25,9 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      |> assign(:table, table)
      |> assign(:top_discard, top_discard(table))
      |> assign(:user, user)
-     |> assign(:selected_cards, [])}
+     |> assign(:selected_cards, [])
+     |> assign(:can_discard_selection?, false)
+     |> assign(:can_play_selection?, false)}
   end
 
   ###
@@ -81,7 +83,13 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
         [card_position | selected_cards]
       end
 
-    {:noreply, assign(socket, :selected_cards, selected_cards)}
+    {:noreply,
+     socket
+     |> assign(:selected_cards, selected_cards)
+     |> assign(
+       :can_discard_selection?,
+       can_discard_selection?(socket, selected_cards)
+     )}
   end
 
   def handle_event("discard", %{"card_position" => card_position}, socket) do
@@ -165,5 +173,17 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
       "game:#{game_id}",
       {:game_updated, {rules, table}}
     )
+  end
+
+  defp can_discard_selection?(_socket, []), do: false
+
+  defp can_discard_selection?(socket, selected_cards) do
+    via = Game.via_tuple(socket.assigns.game_id)
+    player_position = socket.assigns.user.position
+
+    case Game.validate_discard_selection(via, player_position, selected_cards) do
+      {:ok, _next_play} -> true
+      :error -> false
+    end
   end
 end
