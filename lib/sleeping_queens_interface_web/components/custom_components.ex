@@ -12,7 +12,7 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
       <.card card={card} card_position={card_position}/>
   """
   attr :card, :map
-  attr :card_position, :integer
+  attr :card_position, :integer, default: nil
   attr :class, :string, default: nil
 
   def card(assigns) do

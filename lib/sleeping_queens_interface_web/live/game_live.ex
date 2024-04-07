@@ -23,7 +23,6 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      |> assign(:game_id, game_id)
      |> assign(:rules, rules)
      |> assign(:table, table)
-     |> assign(:top_discard, top_discard(table))
      |> assign(:user, user)
      |> assign(:selected_cards, [])
      |> assign(:can_discard_selection?, false)
@@ -92,24 +91,20 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      )}
   end
 
-  def handle_event("discard", %{"card_position" => card_position}, socket) do
-    card_position = String.to_integer(card_position)
-    # discard_cards()
-    {:ok, table} =
-      Table.discard_cards(
-        socket.assigns.table,
-        [card_position],
-        socket.assigns.user.position
-      )
-
-    {:noreply,
-     socket
-     |> assign(:table, table)
-     |> assign(:top_discard, top_discard(table))}
-  end
-
   def handle_event("discard", _, socket) do
-    {:noreply, socket}
+    game_id = socket.assigns.game_id
+    via = Game.via_tuple(game_id)
+    player_position = socket.assigns.user.position
+    selected_cards = socket.assigns.selected_cards
+
+    with :ok <- Game.discard(via, player_position, selected_cards) do
+      broadcast_new_state(game_id)
+
+      {:noreply,
+       socket
+       |> assign(:selected_cards, [])
+       |> assign(:can_discard_selection?, false)}
+    end
   end
 
   def handle_event("select_queen", %{"row" => row, "col" => col}, socket) do
@@ -134,7 +129,11 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     {:noreply,
      socket
      |> assign(:rules, rules)
-     |> assign(:table, table)}
+     |> assign(:table, table)
+     |> assign(
+       :can_discard_selection?,
+       can_discard_selection?(socket, socket.assigns.selected_cards)
+     )}
   end
 
   ###
@@ -182,7 +181,7 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     player_position = socket.assigns.user.position
 
     case Game.validate_discard_selection(via, player_position, selected_cards) do
-      {:ok, _next_play} -> true
+      {:ok, _next_action} -> true
       :error -> false
     end
   end
