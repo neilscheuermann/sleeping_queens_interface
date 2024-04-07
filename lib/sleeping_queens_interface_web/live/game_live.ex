@@ -52,25 +52,6 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     end
   end
 
-  def handle_event("deal_cards", _args, socket) do
-    game_id = socket.assigns.game_id
-    via = Game.via_tuple(game_id)
-
-    case Game.deal_cards(via) do
-      :ok ->
-        broadcast_new_state(game_id)
-        {:noreply, socket}
-
-      :error ->
-        {:noreply,
-         put_flash(
-           socket,
-           :error,
-           "Unable to start game without enough players"
-         )}
-    end
-  end
-
   def handle_event("select", %{"card_position" => card_position}, socket) do
     card_position = String.to_integer(card_position)
     selected_cards = socket.assigns.selected_cards

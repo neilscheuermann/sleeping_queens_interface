@@ -73,40 +73,30 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
     assert render(view) =~ "Unable to start game without enough players"
   end
 
-  test "renders correct number of cards in draw pile before and after dealing the cards",
+  test "renders correct number of cards in draw pile after starting the game",
        %{conn: conn} do
-    # Player1 goes to home page
+    # Player1 creates game and is redirected
     {:ok, view, _html} = live(conn, "/")
-    assert view.module == SleepingQueensInterfaceWeb.HomeLive
-
-    # Creates game and is redirected
     render_click(view, "create_game", %{"player_name" => @player1_name})
     {path, _flash} = assert_redirect(view)
     game_id = extract_game_id(path)
 
-    # Player2 goes to home page
+    # Player2 joins player1's game and is redirected
     {:ok, view, _html} = live(conn, "/")
-    assert view.module == SleepingQueensInterfaceWeb.HomeLive
 
-    # Joins player1's game and is redirected to correct game
     render_click(view, "join_game", %{
       "game_id" => game_id,
       "player_name" => @player2_name
     })
 
     {path, _flash} = assert_redirect(view)
-    assert extract_game_id(path) == game_id
 
-    # Visit game page
+    # Player2 visits game page
     {:ok, view, _html} = live(conn, path)
     assert view.module == SleepingQueensInterfaceWeb.GameLive
 
     # start game
     render_click(view, "start_game")
-    assert render(view) =~ "#{@total_number_of_draw_cards} cards"
-
-    # deal cards
-    render_click(view, "deal_cards")
     assert render(view) =~ "#{@total_number_of_draw_cards - 10} cards"
   end
 
@@ -124,10 +114,11 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
       render_click(view, "start_game")
       assert_receive({:game_updated, {rules, table}})
 
-      Enum.each(
-        table.players,
-        &assert(&1.name in [@player1_name, @player2_name])
-      )
+      assert length(table.draw_pile) == @total_number_of_draw_cards - 10
+
+      for player <- table.players do
+        assert length(player.hand) == 5
+      end
 
       assert %SleepingQueensEngine.Rules{
                state: :playing,
@@ -136,11 +127,21 @@ defmodule SleepingQueensInterfaceWeb.GameLiveTest do
                waiting_on: nil
              } = rules
 
-      # TEST dealing cards
-      render_click(view, "deal_cards")
-      assert_receive({:game_updated, {_rules, table}})
+      # TEST discarding (first card in hand)
+      render_click(view, "select", %{"card_position" => "1"})
+      render_click(view, "discard")
+      assert_receive({:game_updated, {rules, table}})
 
-      assert length(table.draw_pile) == @total_number_of_draw_cards - 10
+      assert length(table.draw_pile) == @total_number_of_draw_cards - 10 - 1
+
+      for player <- table.players do
+        assert length(player.hand) == 5
+      end
+
+      assert %SleepingQueensEngine.Rules{
+               player_turn: 2,
+               waiting_on: nil
+             } = rules
     end
   end
 

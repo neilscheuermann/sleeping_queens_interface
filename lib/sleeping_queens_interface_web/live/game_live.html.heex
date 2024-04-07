@@ -56,10 +56,7 @@
     :if={@rules.state != :initialized}
     class="flex justify-center gap-2 mt-4 col-start-2 col-end-4 row-start-3 row-end-last"
   >
-    <div
-      class="text-center text-xs w-16 h-24 bg-rose-500 border border-gray-700 shadow rounded overflow-hidden"
-      phx-click="deal_cards"
-    >
+    <div class="text-center text-xs w-16 h-24 bg-rose-500 border border-gray-700 shadow rounded overflow-hidden">
       <span><%= length(@table.draw_pile) %> cards</span>
     </div>
     <div class="w-16 h-24 border border-dashed border-gray-700 shadow rounded overflow-hidden">
