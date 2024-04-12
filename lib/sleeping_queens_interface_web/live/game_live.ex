@@ -18,6 +18,8 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     %{game_id: game_id, rules: rules, table: table} =
       Game.get_state(Game.via_tuple(game_id))
 
+    rules.waiting_on |> IO.inspect(label: ">>>>waiting_on")
+
     {:ok,
      socket
      |> assign(:game_id, game_id)
@@ -69,6 +71,10 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      |> assign(
        :can_discard_selection?,
        can_discard_selection?(socket, selected_cards)
+     )
+     |> assign(
+       :can_play_selection?,
+       can_play_selection?(socket, selected_cards)
      )}
   end
 
@@ -88,18 +94,41 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     end
   end
 
-  def handle_event("select_queen", %{"row" => row, "col" => col}, socket) do
-    {row, _} = Integer.parse(row)
-    {col, _} = Integer.parse(col)
-    # TODO>>>> Replace hard coded value
-    {:ok, table} =
-      Table.select_queen(
-        socket.assigns.table,
-        {row, col},
-        socket.assigns.user.position
-      )
+  def handle_event("play", _, socket) do
+    game_id = socket.assigns.game_id
+    via = Game.via_tuple(game_id)
+    player_position = socket.assigns.user.position
+    selected_cards = socket.assigns.selected_cards
 
-    {:noreply, assign(socket, :table, table)}
+    with :ok <- Game.play(via, player_position, selected_cards) do
+      broadcast_new_state(game_id)
+
+      {:noreply,
+       socket
+       |> assign(:selected_cards, [])
+       |> assign(:can_play_selection?, false)}
+    end
+  end
+
+  def handle_event("select_queen", %{"row" => row, "col" => col}, socket) do
+    if should_select_queen(socket.assigns.rules.waiting_on, socket.assigns.user) do
+      {row, _} = Integer.parse(row)
+      {col, _} = Integer.parse(col)
+      game_id = socket.assigns.game_id
+      via = Game.via_tuple(game_id)
+      player_position = socket.assigns.user.position
+
+      with :ok <- Game.select_queen(via, player_position, row, col) do
+        broadcast_new_state(game_id)
+
+        {:noreply,
+         socket
+         |> assign(:selected_cards, [])
+         |> assign(:can_play_selection?, false)}
+      end
+    else
+      {:noreply, socket}
+    end
   end
 
   ###
@@ -107,6 +136,8 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   #
 
   def handle_info({:game_updated, {rules, table}}, socket) do
+    rules.waiting_on |> IO.inspect(label: ">>>>updated waiting_on")
+
     {:noreply,
      socket
      |> assign(:rules, rules)
@@ -114,6 +145,10 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      |> assign(
        :can_discard_selection?,
        can_discard_selection?(socket, socket.assigns.selected_cards)
+     )
+     |> assign(
+       :can_play_selection?,
+       can_play_selection?(socket, socket.assigns.selected_cards)
      )}
   end
 
@@ -166,4 +201,22 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
       :error -> false
     end
   end
+
+  defp can_play_selection?(_socket, []), do: false
+
+  defp can_play_selection?(socket, selected_cards) do
+    via = Game.via_tuple(socket.assigns.game_id)
+    player_position = socket.assigns.user.position
+
+    case Game.validate_play_selection(via, player_position, selected_cards) do
+      {:ok, _next_action} -> true
+      :error -> false
+    end
+  end
+
+  defp should_select_queen(%{action: :select_queen} = waiting_on, user)
+       when waiting_on.player_position == user.position,
+       do: true
+
+  defp should_select_queen(_waiting_on, _user), do: false
 end

@@ -36,8 +36,10 @@
   <% end %>
   <!-- Queens board -->
   <div class="col-start-2 col-end-4 row-start-1 row-end-3 flex justify-center">
-    <div class="grid grid-cols-4 gap-1 w-fit justify-center">
-      <%= for {{row, col}, queen } <- @table.queens_board do %>
+    <div class={"grid grid-cols-4 gap-1 w-fit justify-center 
+                #{should_select_queen(@rules.waiting_on, @user) and "bg-yellow-200"}
+                "}>
+      <%= for {{row, col}, queen} <- @table.queens_board do %>
         <%= if is_nil(queen) do %>
           <div class="w-10 h-16 border border-gray-700 border-dashed rounded" />
         <% else %>
@@ -96,12 +98,10 @@
   <% end %>
   <!-- My queen cards -->
   <div class="h-24 grid grid-cols-6 px-2 mt-4">
-    <%= for {queen, _idx} <- 
-    @table.players
-    |> List.first()
-    |> Map.get(:queens) 
-    |> Enum.with_index()
-    |> Enum.reverse() do %>
+    <%= for queen <- @table
+                      |> get_player(@user.position)
+                      |> Map.get(:queens) 
+                      |> Enum.reverse() do %>
       <.queen_card queen={queen} />
     <% end %>
   </div>
