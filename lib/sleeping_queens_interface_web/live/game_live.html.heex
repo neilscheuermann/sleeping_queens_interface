@@ -37,7 +37,7 @@
   <!-- Queens board -->
   <div class="col-start-2 col-end-4 row-start-1 row-end-3 flex justify-center">
     <div class={"grid grid-cols-4 gap-1 w-fit justify-center 
-                #{should_select_queen(@rules.waiting_on, @user) and "bg-yellow-200"}
+                #{should_select_queen?(@rules.waiting_on, @user) and "bg-yellow-200"}
                 "}>
       <%= for {{row, col}, queen} <- @table.queens_board do %>
         <%= if is_nil(queen) do %>
@@ -58,7 +58,12 @@
     :if={@rules.state != :initialized}
     class="flex justify-center gap-2 mt-4 col-start-2 col-end-4 row-start-3 row-end-last"
   >
-    <div class="text-center text-xs w-16 h-24 bg-rose-500 border border-gray-700 shadow rounded overflow-hidden">
+    <div
+      phx-click="draw_for_jester"
+      class={"text-center text-xs w-16 h-24 bg-rose-500 border border-gray-700 shadow rounded overflow-hidden
+              #{should_draw_for_jester?(@rules.waiting_on, @user) and "shadow-lg shadow-yellow-500"}
+                "}
+    >
       <span><%= length(@table.draw_pile) %> cards</span>
     </div>
     <div class="w-16 h-24 border border-dashed border-gray-700 shadow rounded overflow-hidden">

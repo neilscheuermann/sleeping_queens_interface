@@ -111,7 +111,10 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   end
 
   def handle_event("select_queen", %{"row" => row, "col" => col}, socket) do
-    if should_select_queen(socket.assigns.rules.waiting_on, socket.assigns.user) do
+    if should_select_queen?(
+         socket.assigns.rules.waiting_on,
+         socket.assigns.user
+       ) do
       {row, _} = Integer.parse(row)
       {col, _} = Integer.parse(col)
       game_id = socket.assigns.game_id
@@ -119,6 +122,28 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
       player_position = socket.assigns.user.position
 
       with :ok <- Game.select_queen(via, player_position, row, col) do
+        broadcast_new_state(game_id)
+
+        {:noreply,
+         socket
+         |> assign(:selected_cards, [])
+         |> assign(:can_play_selection?, false)}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_event("draw_for_jester", _, socket) do
+    if should_draw_for_jester?(
+         socket.assigns.rules.waiting_on,
+         socket.assigns.user
+       ) do
+      game_id = socket.assigns.game_id
+      via = Game.via_tuple(game_id)
+      player_position = socket.assigns.user.position
+
+      with :ok <- Game.draw_for_jester(via, player_position) do
         broadcast_new_state(game_id)
 
         {:noreply,
@@ -214,9 +239,15 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     end
   end
 
-  defp should_select_queen(%{action: :select_queen} = waiting_on, user)
+  defp should_draw_for_jester?(%{action: :draw_for_jester} = waiting_on, user)
        when waiting_on.player_position == user.position,
        do: true
 
-  defp should_select_queen(_waiting_on, _user), do: false
+  defp should_draw_for_jester?(_waiting_on, _user), do: false
+
+  defp should_select_queen?(%{action: :select_queen} = waiting_on, user)
+       when waiting_on.player_position == user.position,
+       do: true
+
+  defp should_select_queen?(_waiting_on, _user), do: false
 end
