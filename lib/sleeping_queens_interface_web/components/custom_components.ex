@@ -64,7 +64,7 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
 
   def banner(assigns) do
     ~H"""
-    <p class="text-xl text-center">
+    <p class="text-lg text-center">
       <%= render_slot(@inner_block) %>
     </p>
     """

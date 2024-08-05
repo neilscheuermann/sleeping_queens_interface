@@ -258,8 +258,7 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
 
     cond do
       waiting_on ->
-        player = get_player(table, waiting_on.player_position)
-        "#{player.name} #{get_action(waiting_on.action)}"
+        "#{get_action(waiting_on.action)}"
 
       rules.state == :initialized ->
         "Waiting to start..."
@@ -269,8 +268,15 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     end
   end
 
-  defp get_action(:choose_queen_to_steal), do: "steal a queen"
+  defp get_action(:select_queen), do: "select a queen"
+  defp get_action(:draw_for_jester), do: "draw for the jester"
+  defp get_action(:choose_queen_to_steal), do: "chose someone's queen to steal"
 
   defp get_action(:choose_queen_to_place_back_on_board),
-    do: "put a queen back on the board"
+    do: "choose someone's queen to put to sleep"
+
+  defp get_action(:block_steal_queen), do: "thwarted the knight with a dragon"
+
+  defp get_action(:block_place_queen_back_on_board),
+    do: "blocked the potion with a wand"
 end
