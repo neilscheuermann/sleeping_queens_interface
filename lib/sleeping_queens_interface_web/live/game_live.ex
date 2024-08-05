@@ -254,10 +254,23 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   defp get_banner_text(assigns) do
     %{rules: rules, table: table} = assigns
     current_player = get_player(table, rules.player_turn)
+    waiting_on = rules.waiting_on
 
-    case rules.state do
-      :initialized -> "Waiting to start..."
-      :playing -> "#{current_player.name}'s turn"
+    cond do
+      waiting_on ->
+        player = get_player(table, waiting_on.player_position)
+        "#{player.name} #{get_action(waiting_on.action)}"
+
+      rules.state == :initialized ->
+        "Waiting to start..."
+
+      rules.state == :playing ->
+        "#{current_player.name}'s turn"
     end
   end
+
+  defp get_action(:choose_queen_to_steal), do: "steal a queen"
+
+  defp get_action(:choose_queen_to_place_back_on_board),
+    do: "put a queen back on the board"
 end
