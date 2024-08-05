@@ -250,4 +250,14 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
        do: true
 
   defp should_select_queen?(_waiting_on, _user), do: false
+
+  defp get_banner_text(assigns) do
+    %{rules: rules, table: table} = assigns
+    current_player = get_player(table, rules.player_turn)
+
+    case rules.state do
+      :initialized -> "Waiting to start..."
+      :playing -> "#{current_player.name}'s turn"
+    end
+  end
 end

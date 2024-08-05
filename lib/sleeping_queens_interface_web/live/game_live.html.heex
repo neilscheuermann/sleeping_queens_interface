@@ -1,10 +1,8 @@
 <h1 class="text-3xl text-center mt-4">Sleeping Queens</h1>
-<p :if={@rules.state == :initialized} class="text-xl text-center">
-  Waiting to start...
-</p>
-<p :if={@rules.state == :playing} class="text-xl text-center">
-  <%= get_player(@table, @rules.player_turn).name %>'s turn
-</p>
+<!-- Banner -->
+<.banner>
+  <%= get_banner_text(assigns) %>
+</.banner>
 <!-- Board and other players -->
 <div class="grid grid-cols-4 grid-rows-3 mt-2">
   <!-- Other players -->

@@ -52,4 +52,21 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
     </div>
     """
   end
+
+  @doc ~S"""
+  Renders the banner for game info
+
+  ## Examples
+
+      <.banner />
+  """
+  slot :inner_block, required: true
+
+  def banner(assigns) do
+    ~H"""
+    <p class="text-xl text-center">
+      <%= render_slot(@inner_block) %>
+    </p>
+    """
+  end
 end
