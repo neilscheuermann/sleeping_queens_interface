@@ -257,11 +257,13 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     waiting_on = rules.waiting_on
 
     cond do
-      waiting_on ->
-        "#{get_action(waiting_on.action)}"
-
       rules.state == :initialized ->
         "Waiting to start..."
+
+      waiting_on ->
+        waiting_on_player = get_player(table, rules.waiting_on.player_position)
+
+        "#{waiting_on_player.name}, #{get_action(waiting_on.action)}"
 
       rules.state == :playing ->
         "#{current_player.name}'s turn"
@@ -279,4 +281,26 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
 
   defp get_action(:block_place_queen_back_on_board),
     do: "blocked the potion with a wand"
+
+  defp action_required?(_player, %{rules: %{state: state}})
+       when state != :playing,
+       do: false
+
+  defp action_required?(player, assigns) do
+    is_waiting_on_player?(player, assigns) or is_players_turn(player, assigns)
+  end
+
+  defp is_waiting_on_player?(%{position: player_position}, %{
+         rules: %{waiting_on: %{player_position: player_position}}
+       }),
+       do: true
+
+  defp is_waiting_on_player?(_player, _assigns), do: false
+
+  defp is_players_turn(%{position: player_position}, %{
+         rules: %{waiting_on: nil, player_turn: player_position}
+       }),
+       do: true
+
+  defp is_players_turn(_player, _assigns), do: false
 end

@@ -7,7 +7,7 @@
 <div class="grid grid-cols-4 grid-rows-3 mt-2">
   <!-- Other players -->
   <%= for player <- @table.players, player.position != @user.position do %>
-    <.player>
+    <.player action_required?={action_required?(player, assigns)}>
       <span class="block text-center text-xl font-bold">
         <%= player.name %>
       </span>
@@ -62,7 +62,7 @@
 <div class="flex">
   <!-- My player -->
   <%= for player <- get_player(@table, @user.position) |> List.wrap()  do %>
-    <.player>
+    <.player action_required?={action_required?(player, assigns)}>
       <div class="flex justify-evenly items-center">
         <span class="text-center text-lg font-bold"><%= player.name %></span>
         <span class="font-bold text-lg"><%= get_score(player) %></span>

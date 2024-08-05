@@ -79,11 +79,12 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
 
       <.player />
   """
+  attr :action_required?, :boolean, default: false
   slot :inner_block, required: true
 
   def player(assigns) do
     ~H"""
-    <span>
+    <span class={"#{@action_required? and "bg-yellow-200 rounded-full"}"}>
       <svg
         class="w-24"
         xmlns="http://www.w3.org/2000/svg"
