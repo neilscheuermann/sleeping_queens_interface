@@ -108,3 +108,12 @@
     Discard
   </.button>
 </div>
+<!-- Select Queen modal -->
+<!-- make them select a queen to close the modal -->
+<.modal
+  id="select_queen_modal"
+  show={@select_opponents_queen?}
+  block_exit={true}
+>
+  <.header><%= get_action_text(@rules.waiting_on.action) %></.header>
+</.modal>

@@ -4,7 +4,6 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   require Logger
 
   alias SleepingQueensEngine.Game
-  alias SleepingQueensEngine.Table
 
   def mount(
         %{"id" => game_id, "player_position" => player_position},
@@ -28,7 +27,8 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      |> assign(:user, user)
      |> assign(:selected_cards, [])
      |> assign(:can_discard_selection?, false)
-     |> assign(:can_play_selection?, false)}
+     |> assign(:can_play_selection?, false)
+     |> assign(:select_opponents_queen?, select_opponents_queen?(user, rules))}
   end
 
   ###
@@ -174,6 +174,10 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      |> assign(
        :can_play_selection?,
        can_play_selection?(socket, socket.assigns.selected_cards)
+     )
+     |> assign(
+       :select_opponents_queen?,
+       select_opponents_queen?(socket.assigns.user, rules)
      )}
   end
 
@@ -263,23 +267,26 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
       waiting_on ->
         waiting_on_player = get_player(table, rules.waiting_on.player_position)
 
-        "#{waiting_on_player.name}, #{get_action(waiting_on.action)}"
+        "#{waiting_on_player.name}, #{get_action_text(waiting_on.action)}"
 
       rules.state == :playing ->
         "#{current_player.name}'s turn"
     end
   end
 
-  defp get_action(:select_queen), do: "select a queen"
-  defp get_action(:draw_for_jester), do: "draw for the jester"
-  defp get_action(:choose_queen_to_steal), do: "chose someone's queen to steal"
+  defp get_action_text(:select_queen), do: "select a queen"
+  defp get_action_text(:draw_for_jester), do: "draw for the jester"
 
-  defp get_action(:choose_queen_to_place_back_on_board),
+  defp get_action_text(:choose_queen_to_steal),
+    do: "chose someone's queen to steal"
+
+  defp get_action_text(:choose_queen_to_place_back_on_board),
     do: "choose someone's queen to put to sleep"
 
-  defp get_action(:block_steal_queen), do: "thwarted the knight with a dragon"
+  defp get_action_text(:block_steal_queen),
+    do: "thwarted the knight with a dragon"
 
-  defp get_action(:block_place_queen_back_on_board),
+  defp get_action_text(:block_place_queen_back_on_board),
     do: "blocked the potion with a wand"
 
   defp action_required?(_player, %{rules: %{state: state}})
@@ -303,4 +310,21 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
        do: true
 
   defp is_players_turn(_player, _assigns), do: false
+
+  defp select_opponents_queen?(
+         %{position: waiting_on_position} = _user,
+         %{
+           waiting_on: %{
+             player_position: waiting_on_position,
+             action: action
+           }
+         } = _rules
+       )
+       when action in [
+              :choose_queen_to_steal,
+              :choose_queen_to_place_back_on_board
+            ],
+       do: true
+
+  defp select_opponents_queen?(_user, _rules), do: false
 end
