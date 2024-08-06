@@ -1,4 +1,8 @@
 <h1 class="text-3xl text-center mt-4">Sleeping Queens</h1>
+<!-- TODO>>>> Resolve this issue -->
+<div :if={@select_opponents_queen?} class="m-2 grid grid-cols-3 gap-2">
+  poop
+</div>
 <!-- Banner -->
 <.banner>
   <%= get_banner_text(assigns) %>
@@ -115,5 +119,11 @@
   show={@select_opponents_queen?}
   block_exit={true}
 >
-  <.header><%= get_action_text(@rules.waiting_on.action) %></.header>
+  <.header><%= get_action_text(@rules.waiting_on) %></.header>
+  <%= for player <- @table.players, player.position != @user.position do %>
+    <p><%= player.name %></p>
+    <%= for queen <- player.queens do %>
+      <.queen_card queen={queen} phx-click="choose_opponent_queen" />
+    <% end %>
+  <% end %>
 </.modal>

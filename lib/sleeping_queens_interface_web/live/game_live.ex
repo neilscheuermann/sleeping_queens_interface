@@ -95,10 +95,14 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   end
 
   def handle_event("play", _, socket) do
-    game_id = socket.assigns.game_id
+    %{
+      game_id: game_id,
+      selected_cards: selected_cards,
+      user: user
+    } = socket.assigns
+
     via = Game.via_tuple(game_id)
-    player_position = socket.assigns.user.position
-    selected_cards = socket.assigns.selected_cards
+    player_position = user.position
 
     with :ok <- Game.play(via, player_position, selected_cards) do
       broadcast_new_state(game_id)
@@ -156,6 +160,12 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     end
   end
 
+  def handle_event("choose_opponent_queen", _, socket) do
+    IO.inspect(">>>> Figure out if this is to steal or put face down")
+
+    {:noreply, socket}
+  end
+
   ###
   # Game PubSub updates
   #
@@ -178,6 +188,7 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      |> assign(
        :select_opponents_queen?,
        select_opponents_queen?(socket.assigns.user, rules)
+       |> IO.inspect(label: ">>>>select op queen")
      )}
   end
 
@@ -267,27 +278,29 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
       waiting_on ->
         waiting_on_player = get_player(table, rules.waiting_on.player_position)
 
-        "#{waiting_on_player.name}, #{get_action_text(waiting_on.action)}"
+        "#{waiting_on_player.name}, #{get_action_text(waiting_on)}"
 
       rules.state == :playing ->
         "#{current_player.name}'s turn"
     end
   end
 
-  defp get_action_text(:select_queen), do: "select a queen"
-  defp get_action_text(:draw_for_jester), do: "draw for the jester"
+  defp get_action_text(%{action: :select_queen}), do: "select a queen"
+  defp get_action_text(%{action: :draw_for_jester}), do: "draw for the jester"
 
-  defp get_action_text(:choose_queen_to_steal),
+  defp get_action_text(%{action: :choose_queen_to_steal}),
     do: "chose someone's queen to steal"
 
-  defp get_action_text(:choose_queen_to_place_back_on_board),
+  defp get_action_text(%{action: :choose_queen_to_place_back_on_board}),
     do: "choose someone's queen to put to sleep"
 
-  defp get_action_text(:block_steal_queen),
+  defp get_action_text(%{action: :block_steal_queen}),
     do: "thwarted the knight with a dragon"
 
-  defp get_action_text(:block_place_queen_back_on_board),
+  defp get_action_text(%{action: :block_place_queen_back_on_board}),
     do: "blocked the potion with a wand"
+
+  defp get_action_text(_waiting_on), do: ""
 
   defp action_required?(_player, %{rules: %{state: state}})
        when state != :playing,

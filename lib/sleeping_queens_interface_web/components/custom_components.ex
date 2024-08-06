@@ -39,10 +39,15 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
 
       <.queen_card queen={queen} row={row} col={col}/>
   """
+  attr :queen, :map
+  attr :rest, :global, doc: "something...."
 
   def queen_card(assigns) do
     ~H"""
-    <div class="flex flex-col p-1 justify-between w-16 h-24 bg-fuchsia-300 border border-gray-700 rounded overflow-hidden">
+    <div
+      class="flex flex-col p-1 justify-between w-16 h-24 bg-fuchsia-300 border border-gray-700 rounded overflow-hidden"
+      {@rest}
+    >
       <div>
         <%= @queen.name %>
       </div>
