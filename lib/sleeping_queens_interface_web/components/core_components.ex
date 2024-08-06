@@ -38,10 +38,25 @@ defmodule SleepingQueensInterfaceWeb.CoreComponents do
   """
   attr :id, :string, required: true
   attr :show, :boolean, default: false
+  attr :block_exit, :boolean, default: false
   attr :on_cancel, JS, default: %JS{}
   slot :inner_block, required: true
 
   def modal(assigns) do
+    additional_attrs =
+      unless assigns.block_exit do
+        [
+          phx_window_keydown: JS.exec("data-cancel", to: "##{assigns.id}"),
+          phx_key: "escape",
+          phx_click_away: JS.exec("data-cancel", to: "##{assigns.id}")
+        ]
+      else
+        []
+      end
+
+    # Needed this to address the warning I was getting
+    assigns = assign(assigns, :additional_attrs, additional_attrs)
+
     ~H"""
     <div
       id={@id}
@@ -67,21 +82,21 @@ defmodule SleepingQueensInterfaceWeb.CoreComponents do
           <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
             <.focus_wrap
               id={"#{@id}-container"}
-              phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
-              phx-key="escape"
-              phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
               class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-white p-14 shadow-lg ring-1 transition"
+              {@additional_attrs}
             >
-              <div class="absolute top-6 right-5">
-                <button
-                  phx-click={JS.exec("data-cancel", to: "##{@id}")}
-                  type="button"
-                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
-                  aria-label={gettext("close")}
-                >
-                  <.icon name="hero-x-mark-solid" class="h-5 w-5" />
-                </button>
-              </div>
+              <%= unless @block_exit do %>
+                <div class="absolute top-6 right-5">
+                  <button
+                    phx-click={JS.exec("data-cancel", to: "##{@id}")}
+                    type="button"
+                    class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
+                    aria-label={gettext("close")}
+                  >
+                    <.icon name="hero-x-mark-solid" class="h-5 w-5" />
+                  </button>
+                </div>
+              <% end %>
               <div id={"#{@id}-content"}>
                 <%= render_slot(@inner_block) %>
               </div>
