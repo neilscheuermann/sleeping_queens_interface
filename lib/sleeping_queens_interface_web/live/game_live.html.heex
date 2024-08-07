@@ -98,7 +98,7 @@
   <% end %>
 </div>
 <!-- Start button -->
-<div :if={@rules.state == :initialized} class="m-2">
+<div :if={@rules.state == :initialized and @user.position == 1} class="m-2">
   <.button class="w-full" phx-click="start_game">
     Start Game
   </.button>
