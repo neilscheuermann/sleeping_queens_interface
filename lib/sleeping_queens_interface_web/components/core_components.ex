@@ -43,6 +43,8 @@ defmodule SleepingQueensInterfaceWeb.CoreComponents do
   slot :inner_block, required: true
 
   def modal(assigns) do
+    # adding the `block_exit` attribute will block the user from exiting the modal with 
+    # excape or clicking outside the modal.
     additional_attrs =
       unless assigns.block_exit do
         [

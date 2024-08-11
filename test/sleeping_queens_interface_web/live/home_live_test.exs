@@ -128,7 +128,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
     assert render(view3) =~ "Unable to join game"
   end
 
-  # # TODO>>>> Can I return an error rather than the home live view crashing?
+  # # TODO::: Can I return an error rather than the home live view crashing?
   # # Right now it's crashing in Game.add_player because there's not process in 
   # # the registry when it tries to call GenServer.call(game, {:add_player, name})
   # test "cannot join a game that doesn't exist",
@@ -145,7 +145,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
   #   assert render(view) =~ "Unable to join game"
   # end
 
-  # TODO>>>>
+  # TODO:::
   # test "shows join game modal when button is clicked", %{conn: conn} do
   #   {:ok, view, _html} = live(conn, "/")
   #
@@ -160,7 +160,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLiveTest do
   #   assert view |> find_modal("join_game_modal") |> is_not_nil()
   # end
   #
-  # TODO>>>>
+  # TODO:::
   # test "shows create game modal when button is clicked", %{conn: conn} do
   #   {:ok, view, _html} = live(conn, "/")
   #

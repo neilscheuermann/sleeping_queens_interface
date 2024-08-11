@@ -1,8 +1,4 @@
 <h1 class="text-3xl text-center mt-4">Sleeping Queens</h1>
-<!-- TODO>>>> Resolve this issue -->
-<div :if={@select_opponents_queen?} class="m-2 grid grid-cols-3 gap-2">
-  poop
-</div>
 <!-- Banner -->
 <.banner>
   <%= get_banner_text(assigns) %>
@@ -24,11 +20,20 @@
   <!-- Queens board -->
   <div class="col-start-2 col-end-4 row-start-1 row-end-3 flex justify-center">
     <div class={"grid grid-cols-4 gap-1 w-fit justify-center 
-                #{should_select_queen?(@rules.waiting_on, @user) and "bg-yellow-200"}
+                #{(
+                    should_select_queen?(@rules.waiting_on, @user) 
+                    or should_place_queen_back_on_board?(@rules.waiting_on, @user)
+                  ) 
+                  and "bg-yellow-200"}
                 "}>
       <%= for {{row, col}, queen} <- @table.queens_board do %>
         <%= if is_nil(queen) do %>
-          <div class="w-10 h-16 border border-gray-700 border-dashed rounded" />
+          <div
+            class="w-10 h-16 border border-gray-700 border-dashed rounded"
+            phx-click="put_queen_back"
+            phx-value-row={row}
+            phx-value-col={col}
+          />
         <% else %>
           <div
             class="w-10 h-16 bg-teal-600 border border-gray-700 rounded"
@@ -112,18 +117,39 @@
     Discard
   </.button>
 </div>
-<!-- Select Queen modal -->
-<!-- make them select a queen to close the modal -->
+<!-- Modal - Select Opponent's Queen -->
+<!-- `block_exit` block the user from exiting using excape or clicking outside the modal. -->
+<!-- The `:if` below is a hack to get the modal to open when the user plays a sleeping -->
+<!-- potion or a knight. Not sure why it won't update with just `show={@should_select_opponent_queen?}`?  -->
 <.modal
-  id="select_queen_modal"
-  show={@select_opponents_queen?}
+  :if={@should_select_opponent_queen?}
   block_exit={true}
+  show={@should_select_opponent_queen?}
+  id="select_opponent_queen_modal"
 >
   <.header><%= get_action_text(@rules.waiting_on) %></.header>
   <%= for player <- @table.players, player.position != @user.position do %>
     <p><%= player.name %></p>
-    <%= for queen <- player.queens do %>
-      <.queen_card queen={queen} phx-click="choose_opponent_queen" />
+    <%= for {queen, idx} <- Enum.with_index(player.queens) do %>
+      <.queen_card
+        queen={queen}
+        phx-click="select_opponent_queen"
+        phx-value-opponent_position={player.position}
+        phx-value-opponent_queen_position={idx + 1}
+      />
     <% end %>
   <% end %>
+</.modal>
+<!-- Modal - Chose whether to block steal -->
+<.modal
+  :if={@maybe_protect_queen?}
+  block_exit={true}
+  show={@maybe_protect_queen?}
+  id="maybe_block_queen_steal_modal"
+>
+  <.header><%= get_text_for_protect_queen_modal(@rules.waiting_on) %></.header>
+  <.button phx-click="protect_queen" disabled={!@can_block_steal_queen?}>
+    Yes
+  </.button>
+  <.button phx-click="lose_queen">No</.button>
 </.modal>

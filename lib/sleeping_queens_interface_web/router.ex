@@ -17,7 +17,7 @@ defmodule SleepingQueensInterfaceWeb.Router do
   scope "/", SleepingQueensInterfaceWeb do
     pipe_through :browser
 
-    # TODO>>>> Rip out unneeded components
+    # TODO::: Rip out unneeded components
     # get "/", PageController, :home
     live "/", HomeLive
     live "/game/:id/:player_position", GameLive
