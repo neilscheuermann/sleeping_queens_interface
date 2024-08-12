@@ -4,6 +4,7 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   require Logger
 
   alias SleepingQueensEngine.Game
+  alias SleepingQueensEngine.GameSupervisor
 
   def mount(
         %{"id" => game_id, "player_position" => player_position},
@@ -190,22 +191,22 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     end
   end
 
-  # TODO::: Implement
-  def handle_event("protect_queen", _params, socket) do
-    game_id = socket.assigns.game_id
-    via = Game.via_tuple(game_id)
-    player_position = socket.assigns.user.position
-    opponent_position = socket.assigns.rules.waiting_on.player_position
-    waiting_on_action = socket.assigns.rules.waiting_on.action
-
-    IO.inspect("WE WILL PROTECT OUR HOUSE!!!!! - Coach Amanda")
-    # TODO::: Discard the needed card
-    with :ok <- Game.protect_queen(via) do
-      broadcast_new_state(game_id)
-
-      {:noreply, socket}
-    end
-  end
+  # # TODO::: Implement
+  # def handle_event("protect_queen", _params, socket) do
+  #   game_id = socket.assigns.game_id
+  #   via = Game.via_tuple(game_id)
+  #   player_position = socket.assigns.user.position
+  #   opponent_position = socket.assigns.rules.waiting_on.player_position
+  #   waiting_on_action = socket.assigns.rules.waiting_on.action
+  #
+  #   IO.inspect("WE WILL PROTECT OUR HOUSE!!!!! - Coach Amanda")
+  #   # TODO::: Discard the needed card
+  #   with :ok <- Game.protect_queen(via) do
+  #     broadcast_new_state(game_id)
+  #
+  #     {:noreply, socket}
+  #   end
+  # end
 
   def handle_event("lose_queen", _params, socket) do
     game_id = socket.assigns.game_id
@@ -237,6 +238,31 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
         {:noreply, socket}
       end
     end
+  end
+
+  def handle_event("play_again", _params, socket) do
+    game_id = socket.assigns.game_id
+    via = Game.via_tuple(game_id)
+
+    with :ok <- Game.restart_game(via) do
+      broadcast_new_state(game_id)
+
+      {:noreply, socket}
+    else
+      _ ->
+        {
+          :noreply,
+          put_flash(
+            socket,
+            :error,
+            "Unable to start game without enough players"
+          )
+        }
+    end
+  end
+
+  def handle_event("navigate_home", _params, socket) do
+    {:noreply, Phoenix.LiveView.push_navigate(socket, to: "/")}
   end
 
   ###
@@ -323,6 +349,12 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
 
       rules.state == :playing ->
         "#{current_player.name}'s turn"
+
+      rules.state == :game_over ->
+        "Game over"
+
+      true ->
+        ""
     end
   end
 

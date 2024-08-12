@@ -153,3 +153,16 @@
   </.button>
   <.button phx-click="lose_queen">No</.button>
 </.modal>
+<!-- Game over - modal -->
+<.modal
+  :if={@rules.state == :game_over}
+  block_exit={true}
+  show={@rules.state == :game_over}
+  id="game_over"
+>
+  <.header><%= "Game over!! Anuzzzaaaaa????" %></.header>
+  <.button phx-click="play_again" disabled={}>
+    Play again
+  </.button>
+  <.button phx-click="navigate_home">Home</.button>
+</.modal>
