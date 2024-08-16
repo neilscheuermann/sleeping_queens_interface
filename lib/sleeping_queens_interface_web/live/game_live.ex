@@ -4,7 +4,6 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   require Logger
 
   alias SleepingQueensEngine.Game
-  alias SleepingQueensEngine.GameSupervisor
 
   def mount(
         %{"id" => game_id, "player_position" => player_position},
@@ -35,7 +34,11 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
        :maybe_protect_queen?,
        maybe_protect_queen?(user, rules)
      )
-     |> assign(:can_block_steal_queen?, can_block_steal_queen?(user, table))}
+     |> assign(:can_block_steal_queen?, can_block_steal_queen?(user, table))
+     |> assign(
+       :can_block_put_queen_to_sleep?,
+       can_block_put_queen_to_sleep?(user, table)
+     )}
   end
 
   ###
@@ -191,22 +194,16 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     end
   end
 
-  # # TODO::: Implement
-  # def handle_event("protect_queen", _params, socket) do
-  #   game_id = socket.assigns.game_id
-  #   via = Game.via_tuple(game_id)
-  #   player_position = socket.assigns.user.position
-  #   opponent_position = socket.assigns.rules.waiting_on.player_position
-  #   waiting_on_action = socket.assigns.rules.waiting_on.action
-  #
-  #   IO.inspect("WE WILL PROTECT OUR HOUSE!!!!! - Coach Amanda")
-  #   # TODO::: Discard the needed card
-  #   with :ok <- Game.protect_queen(via) do
-  #     broadcast_new_state(game_id)
-  #
-  #     {:noreply, socket}
-  #   end
-  # end
+  def handle_event("protect_queen", _params, socket) do
+    game_id = socket.assigns.game_id
+    via = Game.via_tuple(game_id)
+
+    with :ok <- Game.protect_queen(via) do
+      broadcast_new_state(game_id)
+
+      {:noreply, socket}
+    end
+  end
 
   def handle_event("lose_queen", _params, socket) do
     game_id = socket.assigns.game_id
@@ -292,6 +289,10 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
        :maybe_protect_queen?,
        maybe_protect_queen?(user, rules)
      )
+     |> assign(
+       :can_block_put_queen_to_sleep?,
+       can_block_put_queen_to_sleep?(user, table)
+     )
      |> assign(:can_block_steal_queen?, can_block_steal_queen?(user, table))}
   end
 
@@ -339,13 +340,17 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     waiting_on = rules.waiting_on
 
     cond do
+      rules.player_count == 1 ->
+        "Waiting for more players..."
+
       rules.state == :initialized ->
-        "Waiting to start..."
+        first_player_name = get_player(table, 1).name
+        "Waiting for #{first_player_name} to start the game"
 
       waiting_on ->
-        waiting_on_player = get_player(table, rules.waiting_on.player_position)
+        waiting_on_player = get_player(table, waiting_on.player_position)
 
-        "#{waiting_on_player.name}, #{get_action_text(waiting_on)}"
+        "#{waiting_on_player.name}, is #{get_action_text(rules, table)}"
 
       rules.state == :playing ->
         "#{current_player.name}'s turn"
@@ -358,35 +363,101 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     end
   end
 
-  defp get_action_text(%{action: :select_queen}), do: "select a queen"
-  defp get_action_text(%{action: :draw_for_jester}), do: "draw for the jester"
+  defp get_action_text(%{waiting_on: %{action: :select_queen}}, _table),
+    do: "choosing a queen to pick up"
 
-  defp get_action_text(%{action: :steal_queen}),
-    do: "chose someone's queen to steal"
+  defp get_action_text(%{waiting_on: %{action: :draw_for_jester}}, _table),
+    do: "drawing for the jester"
 
-  defp get_action_text(%{action: :place_queen_back_on_board}),
-    do: "choose someone's queen to put to sleep"
+  defp get_action_text(%{waiting_on: %{action: :steal_queen}}, _table),
+    do: "choosing someone's queen to steal"
 
-  defp get_action_text(%{action: :block_steal_queen}),
-    do: "is choosing whether to block the knight with a dragon"
+  defp get_action_text(
+         %{waiting_on: %{action: :place_queen_back_on_board}},
+         _table
+       ),
+       do: "choosing someone's queen to put to sleep"
 
-  defp get_action_text(%{action: :block_place_queen_back_on_board}),
-    do: "is choosing wether to block the sleeping potion with a wand"
+  defp get_action_text(
+         %{waiting_on: %{action: :block_steal_queen}} = rules,
+         table
+       ),
+       do:
+         "deciding whether to block #{get_player(table, rules.player_turn).name}'s knight"
 
-  defp get_action_text(%{action: :pick_spot_to_return_queen}),
-    do: "choose where to place _____'s queen back on the board"
+  defp get_action_text(
+         %{waiting_on: %{action: :block_place_queen_back_on_board}} = rules,
+         table
+       ),
+       do:
+         "deciding whether to block #{get_player(table, rules.player_turn).name}'s sleeping potion"
 
-  defp get_action_text(_waiting_on), do: ""
+  defp get_action_text(
+         %{waiting_on: %{action: :pick_spot_to_return_queen}} = rules,
+         table
+       ),
+       do:
+         "deciding where to place #{get_player(table, rules.queen_to_lose.player_position).name}'s #{get_queen_to_lose(table, rules).name} queen"
 
-  defp get_text_for_protect_queen_modal(%{action: :block_steal_queen}),
-    do: "Protect queen with a dragon?"
+  defp get_action_text(_rules, _table), do: ""
 
-  defp get_text_for_protect_queen_modal(%{
-         action: :block_place_queen_back_on_board
-       }),
-       do: "Protect queen with a wand?"
+  defp get_text_for_protect_queen_modal(
+         %{waiting_on: %{action: :block_steal_queen}} = rules,
+         table
+       ),
+       do:
+         "Use your dragon to block #{get_player(table, rules.player_turn).name} from stealing your #{get_queen_to_lose(table, rules).name} queen?"
 
-  defp get_text_for_protect_queen_modal(_waiting_on), do: ""
+  defp get_text_for_protect_queen_modal(
+         %{
+           waiting_on: %{action: :block_place_queen_back_on_board}
+         } = rules,
+         table
+       ),
+       do:
+         "Use your wand to block #{get_player(table, rules.player_turn).name} from putting your #{get_queen_to_lose(table, rules).name} queen to sleep?"
+
+  defp get_text_for_protect_queen_modal(_rules, _table), do: ""
+
+  # Action cards
+  defp get_emoji(%{type: :number}), do: ""
+  defp get_emoji(%{type: :jester}), do: "🤹"
+  defp get_emoji(%{type: :king}), do: "👑"
+  defp get_emoji(%{type: :knight}), do: "⚔️"
+  defp get_emoji(%{type: :dragon}), do: "🐉"
+  defp get_emoji(%{type: :wand}), do: "🪄"
+  defp get_emoji(%{type: :sleeping_potion}), do: "💤"
+
+  # Queens
+  defp get_emoji(%{name: "book"}), do: "📚"
+  defp get_emoji(%{name: "butterfly"}), do: "🦋"
+  defp get_emoji(%{name: "cake"}), do: "🎂"
+  defp get_emoji(%{name: "cat"}), do: "🐱"
+  defp get_emoji(%{name: "dog"}), do: "🐶"
+  defp get_emoji(%{name: "heart"}), do: "🩷"
+  defp get_emoji(%{name: "ice cream"}), do: "🍦"
+  defp get_emoji(%{name: "ladybug"}), do: "🐞"
+  defp get_emoji(%{name: "moon"}), do: "🌙"
+  defp get_emoji(%{name: "pancake"}), do: "🥞"
+  defp get_emoji(%{name: "peacock"}), do: "🦚"
+  defp get_emoji(%{name: "rainbow"}), do: "🌈"
+  defp get_emoji(%{name: "rose"}), do: "🌹"
+  defp get_emoji(%{name: "starfish"}), do: "⭐"
+  defp get_emoji(%{name: "strawberry"}), do: "🍓"
+  defp get_emoji(%{name: "sunflower"}), do: "🌻"
+  defp get_emoji(_), do: "❌"
+
+  defp get_queen_to_lose(_table, %{queen_to_lose: nil} = _rules), do: nil
+
+  defp get_queen_to_lose(table, rules) do
+    player_position_to_lose_queen = rules.queen_to_lose.player_position
+    queen_to_lose_index = rules.queen_to_lose.queen_position - 1
+
+    table.players
+    |> Enum.find(&(&1.position == player_position_to_lose_queen))
+    |> Map.get(:queens)
+    |> Enum.at(queen_to_lose_index)
+  end
 
   defp action_required?(_player, %{rules: %{state: state}})
        when state != :playing,
@@ -507,4 +578,11 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
       |> get_player(user.position)
       |> Map.get(:hand, [])
       |> Enum.any?(&(&1.type == :dragon))
+
+  defp can_block_put_queen_to_sleep?(user, table),
+    do:
+      table
+      |> get_player(user.position)
+      |> Map.get(:hand, [])
+      |> Enum.any?(&(&1.type == :wand))
 end

@@ -1,4 +1,4 @@
-<h1 class="text-3xl text-center mt-4">Sleeping Queens</h1>
+<h1 class="text-2xl text-center mt-2">Sleeping Queens - <%= @game_id %></h1>
 <!-- Banner -->
 <.banner>
   <%= get_banner_text(assigns) %>
@@ -6,16 +6,25 @@
 <!-- Board and other players -->
 <div class="grid grid-cols-4 grid-rows-3 mt-2">
   <!-- Other players -->
-  <%= for player <- @table.players, player.position != @user.position do %>
-    <.player action_required?={action_required?(player, assigns)}>
-      <span class="block text-center text-xl font-bold">
-        <%= player.name %>
-      </span>
-      <div class="flex justify-evenly">
-        <span><%= length(player.queens) %></span>
-        <span class="font-bold"><%= get_score(player) %></span>
+  <%= for player <- @table.players |> Enum.reverse(), player.position != @user.position do %>
+    <div>
+      <.player
+        name={player.name}
+        score={get_score(player)}
+        action_required?={action_required?(player, assigns)}
+      />
+      <div class="flex">
+        <%= for queen <- player.queens do %>
+          <.queen_card
+            name={queen.name}
+            emoji={get_emoji(queen)}
+            value={queen.value}
+            width="8"
+            height="12"
+          />
+        <% end %>
       </div>
-    </.player>
+    </div>
   <% end %>
   <!-- Queens board -->
   <div class="col-start-2 col-end-4 row-start-1 row-end-3 flex justify-center">
@@ -52,15 +61,18 @@
   >
     <div
       phx-click="draw_for_jester"
-      class={"text-center text-xs w-16 h-24 bg-rose-500 border border-gray-700 shadow rounded overflow-hidden
+      class={"text-center text-xs w-12 h-20 bg-rose-500 border border-gray-700 shadow rounded overflow-hidden
               #{should_draw_for_jester?(@rules.waiting_on, @user) and "shadow-lg shadow-yellow-500"}
                 "}
     >
       <span><%= length(@table.draw_pile) %> cards</span>
     </div>
-    <div class="w-16 h-24 border border-dashed border-gray-700 shadow rounded overflow-hidden">
+    <div class="w-12 h-20 border border-dashed border-gray-700 shadow rounded overflow-hidden">
       <%= if top_discard(@table) do %>
-        <.card card={top_discard(@table)} />
+        <.card
+          card={top_discard(@table)}
+          emoji={get_emoji(top_discard(@table))}
+        />
       <% else %>
         <span>Discard</span>
       <% end %>
@@ -71,25 +83,47 @@
 <div class="flex">
   <!-- My player -->
   <%= for player <- get_player(@table, @user.position) |> List.wrap()  do %>
-    <.player action_required?={action_required?(player, assigns)}>
-      <div class="flex justify-evenly items-center">
-        <span class="text-center text-lg font-bold"><%= player.name %></span>
-        <span class="font-bold text-lg"><%= get_score(player) %></span>
-      </div>
-    </.player>
+    <.player
+      name={player.name}
+      score={get_score(player)}
+      action_required?={action_required?(player, assigns)}
+    />
   <% end %>
   <!-- My queen cards -->
-  <div class="h-24 grid grid-cols-6 px-2 mt-4">
+  <div class="h-24 grid grid-cols-5 px-2 mt-4">
     <%= for queen <- @table
                       |> get_player(@user.position)
                       |> Map.get(:queens) 
                       |> Enum.reverse() do %>
-      <.queen_card queen={queen} />
+      <.queen_card
+        name={queen.name}
+        emoji={get_emoji(queen)}
+        value={queen.value}
+      />
     <% end %>
   </div>
 </div>
+<!-- Start button -->
+<div :if={@rules.state == :initialized and @user.position == 1} class="m-2">
+  <.button
+    disabled={length(@table.players) < 2}
+    class="w-full"
+    phx-click="start_game"
+  >
+    Start Game
+  </.button>
+</div>
+<!-- Play and Discard buttons -->
+<div :if={@rules.state == :playing} class="m-2 grid grid-cols-3 gap-2">
+  <.button class="col-span-2" phx-click="play" disabled={!@can_play_selection?}>
+    ▶︎ Play
+  </.button>
+  <.button phx-click="discard" disabled={!@can_discard_selection?}>
+    🗑️ Discard
+  </.button>
+</div>
 <!-- My cards -->
-<div class="grid grid-cols-5 px-2 mt-4">
+<div class="grid grid-cols-5 px-2 mb-4">
   <%= for {card, idx} <- 
     @table
     |> get_player(@user.position)
@@ -97,47 +131,43 @@
     |> Enum.with_index() do %>
     <.card
       card={card}
+      emoji={get_emoji(card)}
       card_position={idx + 1}
-      class={(idx + 1) in @selected_cards and "border-2 border-yellow-500"}
+      class={[
+        (idx + 1) in @selected_cards and "border-2 border-yellow-500"
+      ]}
     />
   <% end %>
 </div>
-<!-- Start button -->
-<div :if={@rules.state == :initialized and @user.position == 1} class="m-2">
-  <.button class="w-full" phx-click="start_game">
-    Start Game
-  </.button>
-</div>
-<!-- Play and Discard buttons -->
-<div :if={@rules.state == :playing} class="m-2 grid grid-cols-3 gap-2">
-  <.button class="col-span-2" phx-click="play" disabled={!@can_play_selection?}>
-    Play
-  </.button>
-  <.button phx-click="discard" disabled={!@can_discard_selection?}>
-    Discard
-  </.button>
-</div>
-<!-- Modal - Select Opponent's Queen -->
+<!-- === -->
+<!-- Modals -->
 <!-- `block_exit` block the user from exiting using excape or clicking outside the modal. -->
 <!-- The `:if` below is a hack to get the modal to open when the user plays a sleeping -->
 <!-- potion or a knight. Not sure why it won't update with just `show={@should_select_opponent_queen?}`?  -->
+<!-- === -->
+<!-- === -->
+<!-- Modal - Select Opponent's Queen -->
 <.modal
   :if={@should_select_opponent_queen?}
   block_exit={true}
   show={@should_select_opponent_queen?}
   id="select_opponent_queen_modal"
 >
-  <.header><%= get_action_text(@rules.waiting_on) %></.header>
+  <.header><%= get_action_text(@rules, @table) %></.header>
   <%= for player <- @table.players, player.position != @user.position do %>
     <p><%= player.name %></p>
-    <%= for {queen, idx} <- Enum.with_index(player.queens) do %>
-      <.queen_card
-        queen={queen}
-        phx-click="select_opponent_queen"
-        phx-value-opponent_position={player.position}
-        phx-value-opponent_queen_position={idx + 1}
-      />
-    <% end %>
+    <div class="flex">
+      <%= for {queen, idx} <- Enum.with_index(player.queens) do %>
+        <.queen_card
+          name={queen.name}
+          emoji={get_emoji(queen)}
+          value={queen.value}
+          phx-click="select_opponent_queen"
+          phx-value-opponent_position={player.position}
+          phx-value-opponent_queen_position={idx + 1}
+        />
+      <% end %>
+    </div>
   <% end %>
 </.modal>
 <!-- Modal - Chose whether to block steal -->
@@ -147,11 +177,26 @@
   show={@maybe_protect_queen?}
   id="maybe_block_queen_steal_modal"
 >
-  <.header><%= get_text_for_protect_queen_modal(@rules.waiting_on) %></.header>
-  <.button phx-click="protect_queen" disabled={!@can_block_steal_queen?}>
-    Yes
-  </.button>
-  <.button phx-click="lose_queen">No</.button>
+  <.header>Protect your queen?</.header>
+  <p><%= get_text_for_protect_queen_modal(@rules, @table) %></p>
+  <p>Current Scores</p>
+  <%= for player <- @table.players |> Enum.sort_by(& get_score(&1), :desc) do %>
+    <p><%= player.name %> <%= get_score(player) %></p>
+  <% end %>
+  <div class="mt-2 grid grid-cols-2 gap-2">
+    <.button
+      phx-click="protect_queen"
+      disabled={
+        (@rules.waiting_on.action == :block_steal_queen and
+           not @can_block_steal_queen?) or
+          (@rules.waiting_on.action == :block_place_queen_back_on_board and
+             not @can_block_put_queen_to_sleep?)
+      }
+    >
+      😀 Protect
+    </.button>
+    <.button phx-click="lose_queen">🙁 Reliquish</.button>
+  </div>
 </.modal>
 <!-- Game over - modal -->
 <.modal
@@ -160,7 +205,11 @@
   show={@rules.state == :game_over}
   id="game_over"
 >
-  <.header><%= "Game over!! Anuzzzaaaaa????" %></.header>
+  <.header><%= "Game over!" %></.header>
+  <p>Scores</p>
+  <%= for player <- @table.players |> Enum.sort_by(& get_score(&1), :desc) do %>
+    <p><%= player.name %> <%= get_score(player) %></p>
+  <% end %>
   <.button phx-click="play_again" disabled={}>
     Play again
   </.button>
