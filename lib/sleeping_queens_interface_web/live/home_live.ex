@@ -65,6 +65,7 @@ defmodule SleepingQueensInterfaceWeb.HomeLive do
         socket
       )
       when is_binary(game_id) and is_binary(player_name) do
+    game_id = String.downcase(game_id)
     via = Game.via_tuple(game_id)
 
     with :ok <- Game.add_player(via, player_name) do
@@ -96,5 +97,6 @@ defmodule SleepingQueensInterfaceWeb.HomeLive do
     :crypto.strong_rand_bytes(2)
     |> Base.encode16()
     |> binary_part(0, 4)
+    |> String.downcase()
   end
 end
