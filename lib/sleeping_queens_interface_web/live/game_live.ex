@@ -38,7 +38,8 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
      |> assign(
        :can_block_put_queen_to_sleep?,
        can_block_put_queen_to_sleep?(user, table)
-     )}
+     )
+     |> assign(:should_acknowledge?, should_acknowledge?(user, rules))}
   end
 
   ###
@@ -145,6 +146,28 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
         broadcast_new_state(game_id)
 
         {:noreply, socket}
+      end
+    end
+  end
+
+  def handle_event("acknowledge", _, socket) do
+    if not should_acknowledge?(
+         socket.assigns.rules.waiting_on,
+         socket.assigns.user
+       ) do
+      {:noreply, socket}
+    else
+      game_id = socket.assigns.game_id
+      via = Game.via_tuple(game_id)
+      player_position = socket.assigns.user.position
+
+      with :ok <- Game.acknowledge(via, player_position) do
+        broadcast_new_state(game_id)
+
+        {:noreply,
+         socket
+         |> assign(:selected_cards, [])
+         |> assign(:can_play_selection?, false)}
       end
     end
   end
@@ -293,7 +316,8 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
        :can_block_put_queen_to_sleep?,
        can_block_put_queen_to_sleep?(user, table)
      )
-     |> assign(:can_block_steal_queen?, can_block_steal_queen?(user, table))}
+     |> assign(:can_block_steal_queen?, can_block_steal_queen?(user, table))
+     |> assign(:should_acknowledge?, should_acknowledge?(user, rules))}
   end
 
   ###
@@ -366,6 +390,12 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   defp get_action_text(%{waiting_on: %{action: :select_queen}}, _table),
     do: "choosing a queen to pick up"
 
+  defp get_action_text(
+         %{waiting_on: %{action: :select_another_queen_from_rose}},
+         _table
+       ),
+       do: "choosing another queen to pick up 🌹"
+
   defp get_action_text(%{waiting_on: %{action: :draw_for_jester}}, _table),
     do: "drawing for the jester"
 
@@ -399,25 +429,46 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
        do:
          "deciding where to place #{get_player(table, rules.queen_to_lose.player_position).name}'s #{get_queen_to_lose(table, rules).name} queen"
 
-  defp get_action_text(_rules, _table), do: ""
+  defp get_action_text(
+         %{waiting_on: %{action: :acknowledge_blocked_by_dog_or_cat_queen}} =
+           rules,
+         table
+       ) do
+    queen_name_player_has =
+      table
+      |> get_player(rules.waiting_on.player_position)
+      |> Map.get(:queens)
+      |> Enum.find(&(&1.name in ["cat", "dog"]))
+      |> Map.get(:name)
 
-  defp get_text_for_protect_queen_modal(
+    other_queen_name =
+      case queen_name_player_has do
+        "dog" -> "cat"
+        "cat" -> "dog"
+      end
+
+    "unabled to pick up the #{other_queen_name} queen"
+  end
+
+  defp get_action_text(_rules, _table), do: "__ACTION_TEXT__"
+
+  defp get_header_for_protect_queen_modal(
          %{waiting_on: %{action: :block_steal_queen}} = rules,
          table
        ),
        do:
-         "Use your dragon to block #{get_player(table, rules.player_turn).name} from stealing your #{get_queen_to_lose(table, rules).name} queen?"
+         "Protect your queen from #{get_player(table, rules.player_turn).name} with a dragon 🐉?"
 
-  defp get_text_for_protect_queen_modal(
+  defp get_header_for_protect_queen_modal(
          %{
            waiting_on: %{action: :block_place_queen_back_on_board}
          } = rules,
          table
        ),
        do:
-         "Use your wand to block #{get_player(table, rules.player_turn).name} from putting your #{get_queen_to_lose(table, rules).name} queen to sleep?"
+         "Protect your queen from #{get_player(table, rules.player_turn).name} with a wand 🪄?"
 
-  defp get_text_for_protect_queen_modal(_rules, _table), do: ""
+  defp get_header_for_protect_queen_modal(_rules, _table), do: ""
 
   # Action cards
   defp get_emoji(%{type: :number}), do: ""
@@ -454,7 +505,7 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
     queen_to_lose_index = rules.queen_to_lose.queen_position - 1
 
     table.players
-    |> Enum.find(&(&1.position == player_position_to_lose_queen))
+    |> Enum.find(:players, &(&1.position == player_position_to_lose_queen))
     |> Map.get(:queens)
     |> Enum.at(queen_to_lose_index)
   end
@@ -515,6 +566,13 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
        when waiting_on.player_position == user.position,
        do: true
 
+  defp should_select_queen?(
+         %{action: :select_another_queen_from_rose} = waiting_on,
+         user
+       )
+       when waiting_on.player_position == user.position,
+       do: true
+
   defp should_select_queen?(_waiting_on, _user), do: false
 
   defp should_place_queen_back_on_board?(
@@ -556,6 +614,19 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
        do: true
 
   defp maybe_protect_queen?(_user, _rules), do: false
+
+  defp should_acknowledge?(
+         %{position: waiting_on_position} = _user,
+         %{
+           waiting_on: %{
+             player_position: waiting_on_position,
+             action: :acknowledge_blocked_by_dog_or_cat_queen
+           }
+         } = _rules
+       ),
+       do: true
+
+  defp should_acknowledge?(_user, _rules), do: false
 
   # TODO::: Do this logic in the game Engine and return a boolean.
   # Maybe a list of common actions rather than individual calls for things 

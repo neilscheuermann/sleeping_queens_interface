@@ -46,16 +46,17 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
   attr :name, :string
   attr :emoji, :string
   attr :value, :integer
-  attr :width, :string, default: "12"
-  attr :height, :string, default: "20"
-  attr :class, :string, default: nil
+  attr :shrink?, :boolean, default: false
+  attr :class, :list, default: []
   attr :rest, :global, doc: "something...."
 
   def queen_card(assigns) do
     ~H"""
     <div
       class={[
-        "flex flex-col p-1 justify-between w-#{@width} h-#{@height} bg-fuchsia-300 border border-gray-700 rounded"
+        "flex flex-col p-1 justify-between bg-fuchsia-300 border border-gray-700 rounded",
+        "#{if @shrink?, do: "w-8 h-12", else: "w-12 h-20"}"
+        | @class
       ]}
       {@rest}
     >

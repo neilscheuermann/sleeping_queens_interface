@@ -19,8 +19,7 @@
             name={queen.name}
             emoji={get_emoji(queen)}
             value={queen.value}
-            width="8"
-            height="12"
+            shrink?={true}
           />
         <% end %>
       </div>
@@ -170,19 +169,33 @@
     </div>
   <% end %>
 </.modal>
-<!-- Modal - Chose whether to block steal -->
+<!-- Modal - Chose whether to protect -->
 <.modal
   :if={@maybe_protect_queen?}
   block_exit={true}
   show={@maybe_protect_queen?}
-  id="maybe_block_queen_steal_modal"
+  id="maybe_protect_queen_modal"
 >
-  <.header>Protect your queen?</.header>
-  <p><%= get_text_for_protect_queen_modal(@rules, @table) %></p>
-  <p>Current Scores</p>
-  <%= for player <- @table.players |> Enum.sort_by(& get_score(&1), :desc) do %>
-    <p><%= player.name %> <%= get_score(player) %></p>
+  <.header><%= get_header_for_protect_queen_modal(@rules, @table) %></.header>
+  <!-- Players, scores, and queens -->
+  <%= for player <- @table.players, player.position do %>
+    <p><%= player.name %> - score: <%= get_score(player) %></p>
+    <div class="flex">
+      <%= for queen <- player.queens do %>
+        <.queen_card
+          name={queen.name}
+          emoji={get_emoji(queen)}
+          value={queen.value}
+          class={
+            if get_queen_to_lose(@table, @rules).name == queen.name,
+              do: ["border-2 border-red-700 shadow-md shadow-red-500"],
+              else: []
+          }
+        />
+      <% end %>
+    </div>
   <% end %>
+
   <div class="mt-2 grid grid-cols-2 gap-2">
     <.button
       phx-click="protect_queen"
@@ -193,9 +206,22 @@
              not @can_block_put_queen_to_sleep?)
       }
     >
-      😀 Protect
+      ⚔️ Protect
     </.button>
-    <.button phx-click="lose_queen">🙁 Reliquish</.button>
+    <.button phx-click="lose_queen">❌ Lose</.button>
+  </div>
+</.modal>
+<!-- Modal - Acknowledge unable to pick up dog or cat queen -->
+<.modal
+  :if={@should_acknowledge?}
+  block_exit={true}
+  show={@should_acknowledge?}
+  id="acknowledge_blocked_by_dog_or_cat_queen_modal"
+>
+  <.header>🐱 🚫 🐶</.header>
+  <p>Sorry, you can't have both the cat and dog queen because they'll fight.</p>
+  <div class="mt-2 grid grid-cols-1">
+    <.button phx-click="acknowledge">Ok</.button>
   </div>
 </.modal>
 <!-- Game over - modal -->
@@ -206,11 +232,21 @@
   id="game_over"
 >
   <.header><%= "Game over!" %></.header>
-  <p>Scores</p>
-  <%= for player <- @table.players |> Enum.sort_by(& get_score(&1), :desc) do %>
-    <p><%= player.name %> <%= get_score(player) %></p>
+  <!-- Players, scores, and queens -->
+  <%= for player <- @table.players, player.position do %>
+    <p><%= player.name %> - score: <%= get_score(player) %></p>
+    <div class="flex">
+      <%= for queen <- player.queens do %>
+        <.queen_card
+          name={queen.name}
+          emoji={get_emoji(queen)}
+          value={queen.value}
+        />
+      <% end %>
+    </div>
   <% end %>
-  <.button phx-click="play_again" disabled={}>
+
+  <.button phx-click="play_again" disabled={true}>
     Play again
   </.button>
   <.button phx-click="navigate_home">Home</.button>
