@@ -151,10 +151,7 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   end
 
   def handle_event("acknowledge", _, socket) do
-    if not should_acknowledge?(
-         socket.assigns.rules.waiting_on,
-         socket.assigns.user
-       ) do
+    if not should_acknowledge?(socket.assigns.user, socket.assigns.rules) do
       {:noreply, socket}
     else
       game_id = socket.assigns.game_id
