@@ -450,20 +450,12 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   defp get_action_text(_rules, _table), do: "__ACTION_TEXT__"
 
   defp get_header_for_protect_queen_modal(
-         %{waiting_on: %{action: :block_steal_queen}} = rules,
+         %{waiting_on: %{action: action}} = rules,
          table
-       ),
+       )
+       when action in [:block_place_queen_back_on_board, :block_steal_queen],
        do:
-         "Protect your queen from #{get_player(table, rules.player_turn).name} with a dragon 🐉?"
-
-  defp get_header_for_protect_queen_modal(
-         %{
-           waiting_on: %{action: :block_place_queen_back_on_board}
-         } = rules,
-         table
-       ),
-       do:
-         "Protect your queen from #{get_player(table, rules.player_turn).name} with a wand 🪄?"
+         "Protect your queen from #{get_player(table, rules.player_turn).name}?"
 
   defp get_header_for_protect_queen_modal(_rules, _table), do: ""
 
@@ -493,6 +485,13 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   defp get_emoji(%{name: "starfish"}), do: "⭐"
   defp get_emoji(%{name: "strawberry"}), do: "🍓"
   defp get_emoji(%{name: "sunflower"}), do: "🌻"
+
+  # Waiting on
+  defp get_emoji(%{waiting_on: %{action: :block_steal_queen}}), do: "🐉"
+
+  defp get_emoji(%{waiting_on: %{action: :block_place_queen_back_on_board}}),
+    do: "🪄"
+
   defp get_emoji(_), do: "❌"
 
   defp get_queen_to_lose(_table, %{queen_to_lose: nil} = _rules), do: nil
