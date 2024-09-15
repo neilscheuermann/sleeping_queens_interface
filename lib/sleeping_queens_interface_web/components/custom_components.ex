@@ -43,19 +43,23 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
 
       <.queen_card queen={queen} row={row} col={col}/>
   """
-  attr :name, :string
-  attr :emoji, :string
-  attr :value, :integer
+  attr :name, :string, required: true
+  attr :emoji, :string, required: true
+  attr :value, :integer, required: true
+  attr :special?, :boolean, required: true
   attr :shrink?, :boolean, default: false
   attr :class, :list, default: []
-  attr :rest, :global, doc: "something...."
+  attr :rest, :global, include: ~w(disabled), doc: "something...."
 
   def queen_card(assigns) do
+    # `pointer-events-none` CSS property is added so the event isn't emitted
     ~H"""
     <div
       class={[
         "flex flex-col p-1 justify-between bg-fuchsia-300 border border-gray-700 rounded",
-        "#{if @shrink?, do: "w-8 h-12", else: "w-12 h-20"}"
+        "#{if @shrink?, do: "w-8 h-12", else: "w-12 h-20"}",
+        "#{if @special?, do: "border-2 border-yellow-600 bg-fuchsia-200"}",
+        "#{if @rest[:disabled], do: "text-gray-500 bg-gray-300 pointer-events-none"}"
         | @class
       ]}
       {@rest}

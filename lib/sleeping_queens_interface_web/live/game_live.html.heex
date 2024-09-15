@@ -6,7 +6,7 @@
 <!-- Board and other players -->
 <div class="grid grid-cols-4 grid-rows-3 mt-2">
   <!-- Other players -->
-  <%= for player <- @table.players |> Enum.reverse(), player.position != @user.position do %>
+  <%= for player <- @table.players |> order_players(@user.position), player.position != @user.position do %>
     <div>
       <.player
         name={player.name}
@@ -19,6 +19,7 @@
             name={queen.name}
             emoji={get_emoji(queen)}
             value={queen.value}
+            special?={queen.special?}
             shrink?={true}
           />
         <% end %>
@@ -98,6 +99,7 @@
         name={queen.name}
         emoji={get_emoji(queen)}
         value={queen.value}
+        special?={queen.special?}
       />
     <% end %>
   </div>
@@ -161,6 +163,8 @@
           name={queen.name}
           emoji={get_emoji(queen)}
           value={queen.value}
+          special?={queen.special?}
+          disabled={queen.name == "strawberry"}
           phx-click="select_opponent_queen"
           phx-value-opponent_position={player.position}
           phx-value-opponent_queen_position={idx + 1}
@@ -186,6 +190,7 @@
           name={queen.name}
           emoji={get_emoji(queen)}
           value={queen.value}
+          special?={queen.special?}
           class={
             if get_queen_to_lose(@table, @rules).name == queen.name,
               do: ["border-2 border-red-700 shadow-md shadow-red-500"],
@@ -197,15 +202,7 @@
   <% end %>
 
   <div class="mt-2 grid grid-cols-2 gap-2">
-    <.button
-      phx-click="protect_queen"
-      disabled={
-        (@rules.waiting_on.action == :block_steal_queen and
-           not @can_block_steal_queen?) or
-          (@rules.waiting_on.action == :block_place_queen_back_on_board and
-             not @can_block_put_queen_to_sleep?)
-      }
-    >
+    <.button :if={can_protect_queen?(assigns)} phx-click="protect_queen">
       Protect with <%= get_emoji(@rules) %>
     </.button>
     <.button phx-click="lose_queen">❌ Lose</.button>
@@ -241,6 +238,7 @@
           name={queen.name}
           emoji={get_emoji(queen)}
           value={queen.value}
+          special?={queen.special?}
         />
       <% end %>
     </div>

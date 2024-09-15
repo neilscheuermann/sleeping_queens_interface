@@ -652,4 +652,35 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
       |> get_player(user.position)
       |> Map.get(:hand, [])
       |> Enum.any?(&(&1.type == :wand))
+
+  defp order_players(players, user_position) do
+    # Sort players by their position
+    sorted_players = Enum.sort_by(players, & &1.position)
+
+    # Find the players before and after the user's position
+    {players_after, player_before} =
+      Enum.split_with(sorted_players, fn player ->
+        player.position >= user_position
+      end)
+
+    # Return the ordered list, starting from the user's position
+    players_after ++ player_before
+  end
+
+  defp can_protect_queen?(%{
+         rules: %{waiting_on: %{action: :block_steal_queen}},
+         can_block_steal_queen?: true
+       }),
+       do: true
+
+  defp can_protect_queen?(%{
+         rules: %{waiting_on: %{action: :block_place_queen_back_on_board}},
+         can_block_put_queen_to_sleep?: true
+       }),
+       do: true
+
+  defp can_protect_queen?(assigns) do
+    assigns |> IO.inspect(label: ">>>>assigns")
+    false
+  end
 end
