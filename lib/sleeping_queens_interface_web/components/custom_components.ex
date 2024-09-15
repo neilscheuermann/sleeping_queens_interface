@@ -58,7 +58,7 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
       class={[
         "flex flex-col p-1 justify-between bg-fuchsia-300 border border-gray-700 rounded",
         "#{if @shrink?, do: "w-8 h-12", else: "w-12 h-20"}",
-        "#{if @special?, do: "border-2 border-yellow-600 bg-fuchsia-200"}",
+        "#{if @special?, do: "border-2 border-yellow-600 bg-fuchsia-100"}",
         "#{if @rest[:disabled], do: "text-gray-500 bg-gray-300 pointer-events-none"}"
         | @class
       ]}

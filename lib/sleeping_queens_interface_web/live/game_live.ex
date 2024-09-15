@@ -679,8 +679,5 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
        }),
        do: true
 
-  defp can_protect_queen?(assigns) do
-    assigns |> IO.inspect(label: ">>>>assigns")
-    false
-  end
+  defp can_protect_queen?(_), do: false
 end
