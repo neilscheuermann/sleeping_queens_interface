@@ -13,24 +13,38 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
   """
   attr :card, :map
   attr :emoji, :string
+  attr :bg_color, :string, default: ""
   attr :card_position, :integer, default: nil
   attr :class, :list, default: []
 
   def card(assigns) do
+    bg_color =
+      case assigns.card.type do
+        :knight -> "bg-red-200"
+        :sleeping_potion -> "bg-red-200"
+        :dragon -> "bg-blue-200"
+        :wand -> "bg-blue-200"
+        :jester -> "bg-teal-200"
+        :king -> "bg-violet-400"
+        _ -> "bg-amber-50"
+      end
+
+    assigns = assign(assigns, :bg_color, bg_color)
+
     ~H"""
     <div
       class={[
-        "w-16 h-24 border border-gray-700 shadow hover:shadow-lg rounded overflow-hidden w-12 h-20"
+        "w-16 h-24 border border-gray-700 shadow hover:shadow-lg rounded overflow-hidden",
+        @bg_color
         | @class
       ]}
       phx-click="select"
       phx-value-card_position={@card_position}
     >
-      <p class="p-1">
-        <%= if @card.type == :number, do: @card.value, else: @card.type %>
-      </p>
-      <p :if={@card.type != :number} class="p-1 text-2xl">
-        <%= @emoji %>
+      <p :if={@card.type == :number} class="p-1 text-2xl"><%= @card.value %></p>
+      <p :if={@card.type != :number} class="p-1 pb-0 text-xl"><%= @emoji %></p>
+      <p :if={@card.type == :king} class="p-1 pt-0 text-xs text-slate-50">
+        <%= @card.name %>
       </p>
     </div>
     """
@@ -64,8 +78,8 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
       ]}
       {@rest}
     >
-      <p class="overflow-hidden"><%= @name %></p>
-      <p><%= @emoji %></p>
+      <p class={if @shrink?, do: "", else: "text-xl"}><%= @emoji %></p>
+      <p class="text-xs text-slate-50 overflow-hidden"><%= @name %></p>
       <p><%= @value %></p>
     </div>
     """
@@ -84,7 +98,7 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
 
   def banner(assigns) do
     ~H"""
-    <p class="text-lg text-center">
+    <p class="text-lg text-center whitespace-nowrap overflow-x-auto">
       <%= render_slot(@inner_block) %>
     </p>
     """
@@ -103,9 +117,7 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
 
   def player(assigns) do
     ~H"""
-    <div class={[
-      "#{@action_required? and "bg-yellow-200 rounded-2xl"}"
-    ]}>
+    <div class={["#{@action_required? and "bg-yellow-200 rounded-2xl"}"]}>
       <div class="flex">
         <svg
           class="w-10"
@@ -127,7 +139,9 @@ defmodule SleepingQueensInterfaceWeb.CustomComponents do
           </p>
         </div>
       </div>
-      <p class="text-xl font-bold"><%= @name %></p>
+      <p class="text-xl font-bold whitespace-nowrap overflow-x-auto">
+        <%= @name %>
+      </p>
     </div>
     """
   end

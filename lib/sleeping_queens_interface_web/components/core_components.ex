@@ -489,6 +489,7 @@ defmodule SleepingQueensInterfaceWeb.CoreComponents do
     ~H"""
     <header class={[
       @actions != [] && "flex items-center justify-between gap-6",
+      "whitespace-nowrap overflow-x-auto",
       @class
     ]}>
       <div>

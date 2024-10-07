@@ -462,7 +462,6 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   # Action cards
   defp get_emoji(%{type: :number}), do: ""
   defp get_emoji(%{type: :jester}), do: "🤹"
-  defp get_emoji(%{type: :king}), do: "👑"
   defp get_emoji(%{type: :knight}), do: "⚔️"
   defp get_emoji(%{type: :dragon}), do: "🐉"
   defp get_emoji(%{type: :wand}), do: "🪄"
@@ -486,13 +485,29 @@ defmodule SleepingQueensInterfaceWeb.GameLive do
   defp get_emoji(%{name: "strawberry"}), do: "🍓"
   defp get_emoji(%{name: "sunflower"}), do: "🌻"
 
+  # Kings
+  defp get_emoji(%{name: "tie-dye"}), do: "👑🎨"
+  defp get_emoji(%{name: "puzzle"}), do: "👑🧩"
+  defp get_emoji(%{name: "cookie"}), do: "👑🍪"
+  defp get_emoji(%{name: "fire"}), do: "👑🔥"
+  defp get_emoji(%{name: "turtle"}), do: "👑🐢"
+  defp get_emoji(%{name: "bubble gum"}), do: "👑🍬"
+  defp get_emoji(%{name: "hat"}), do: "👑🎩"
+  defp get_emoji(%{name: "chess"}), do: "👑♟️"
+  defp get_emoji(%{name: "drum"}), do: "👑🥁"
+  defp get_emoji(%{name: "tool"}), do: "👑🛠️"
+  defp get_emoji(%{name: "train"}), do: "👑🚂"
+  defp get_emoji(%{name: "pasta"}), do: "👑🍝"
+
   # Waiting on
   defp get_emoji(%{waiting_on: %{action: :block_steal_queen}}), do: "🐉"
 
   defp get_emoji(%{waiting_on: %{action: :block_place_queen_back_on_board}}),
     do: "🪄"
 
-  defp get_emoji(_), do: "❌"
+  defp get_emoji(_card) do
+    "❌"
+  end
 
   defp get_queen_to_lose(_table, %{queen_to_lose: nil} = _rules), do: nil
 

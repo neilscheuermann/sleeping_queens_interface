@@ -38,7 +38,7 @@
       <%= for {{row, col}, queen} <- @table.queens_board do %>
         <%= if is_nil(queen) do %>
           <div
-            class="w-10 h-16 border border-gray-700 border-dashed rounded"
+            class="w-10 h-16 bg-white border border-gray-700 border-dashed rounded"
             phx-click="put_queen_back"
             phx-value-row={row}
             phx-value-col={col}
@@ -83,14 +83,16 @@
 <div class="flex">
   <!-- My player -->
   <%= for player <- get_player(@table, @user.position) |> List.wrap()  do %>
-    <.player
-      name={player.name}
-      score={get_score(player)}
-      action_required?={action_required?(player, assigns)}
-    />
+    <div class="w-1/4">
+      <.player
+        name={player.name}
+        score={get_score(player)}
+        action_required?={action_required?(player, assigns)}
+      />
+    </div>
   <% end %>
   <!-- My queen cards -->
-  <div class="h-24 grid grid-cols-5 px-2 mt-4">
+  <div class="h-20 grid grid-cols-5 px-2">
     <%= for queen <- @table
                       |> get_player(@user.position)
                       |> Map.get(:queens) 
@@ -183,7 +185,8 @@
   <.header><%= get_header_for_protect_queen_modal(@rules, @table) %></.header>
   <!-- Players, scores, and queens -->
   <%= for player <- @table.players, player.position do %>
-    <p><%= player.name %> - score: <%= get_score(player) %></p>
+    <p class="w-40 whitespace-nowrap overflow-x-auto"><%= player.name %></p>
+    <p>score: <%= get_score(player) %></p>
     <div class="flex">
       <%= for queen <- player.queens do %>
         <.queen_card
@@ -231,7 +234,8 @@
   <.header><%= "Game over!" %></.header>
   <!-- Players, scores, and queens -->
   <%= for player <- @table.players, player.position do %>
-    <p><%= player.name %> - score: <%= get_score(player) %></p>
+    <p class="w-60 whitespace-nowrap overflow-x-auto"><%= player.name %></p>
+    <p>score: <%= get_score(player) %></p>
     <div class="flex">
       <%= for queen <- player.queens do %>
         <.queen_card
