@@ -55,7 +55,9 @@ defmodule SleepingQueensInterface.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:sleeping_queens_engine, path: "../sleeping_queens_engine"}
+      {:sleeping_queens_engine,
+       git: "https://github.com/neilscheuermann/sleeping_queens_engine.git",
+       branch: "main"}
     ]
   end
 
